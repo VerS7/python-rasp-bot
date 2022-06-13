@@ -2,3 +2,4 @@ beautifulsoup4==4.11.1
 Pillow==9.1.1
 requests==2.27.1
 vk_api==11.9.8
+xrld==2.0.1
