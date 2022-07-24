@@ -13,7 +13,7 @@ class Schedule(object):
     size = (1200, 1500)
     """Функции с расписанием"""
     @staticmethod
-    def rasparse(url):
+    def rasparse(url: str) -> list:
         """Вычленение текста расписания с сайта по url"""
         try:
             api = requests.get(url)
@@ -29,7 +29,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def weekreading(cls, groupname, tags, urltype='cg'):
+    def weekreading(cls, groupname: str, tags: dict, urltype='cg') -> tuple:
         """Недельное расписание ДИНО"""
         try:
             url = 'http://dmitrov-dubna.ru/shedule/{0}{1}.htm'.format(urltype, GatherTags.tagsearch(groupname, tags))
@@ -49,7 +49,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def reading(cls, groupname):
+    def reading(cls, groupname: str) -> list:
         """Расписание на день в виде строки"""
         try:
             url = "http://dmitrov-dubna.ru/shedule/hg.htm"
@@ -70,7 +70,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def reading_img(cls, groupname, background):
+    def reading_img(cls, groupname: str, background: str) -> None:
         """Расписание на день в картинке"""
         try:
             mainfont = ImageFont.truetype("impact.ttf", size=35)
@@ -95,12 +95,12 @@ class Schedule(object):
             img.text((120, 265), " ".join(final), font=mainfont, fill=(86, 131, 172))
             img.text((290, 1300), update, font=otherfont, fill=(86, 131, 172))
             image = back.resize(cls.size)
-            image.save('rasp_pic.png')
+            image.save(f'temp/rasp.png')
         except Exception as e:
             print(e)
 
     @staticmethod
-    def weekreading_chuck(lst):
+    def weekreading_chuck(lst: list) -> list:
         """Разделение недельного расписания по дням"""
         try:
             rasp = []
@@ -119,7 +119,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def weekreading_img(cls, groupname, background, tags, urltype='cg'):
+    def weekreading_img(cls, groupname: str, background: str, tags: dict, urltype='cg') -> None:
         """Недельное/основное расписание картинками"""
         try:
             mainfont = ImageFont.truetype("impact.ttf", size=35)
@@ -141,6 +141,7 @@ class Schedule(object):
                     final.append(line)
                 rasp.append(final.copy())
                 final.clear()
+            Util.img_clear(f'temp/{urltype}/*')
             for elem in rasp:
                 back = Image.open(background)
                 img = ImageDraw.Draw(back)
@@ -149,7 +150,7 @@ class Schedule(object):
                 img.text((120, 265), " ".join(elem[1:]), font=mainfont, fill=(86, 131, 172))
                 img.text((290, 1300), update.strip(), font=otherfont, fill=(86, 131, 172))
                 image = back.resize(cls.size)
-                image.save(f'{urltype}/{rasp.index(elem)}_{groupname}.png')
+                image.save(f'temp/{urltype}/{rasp.index(elem)}_{groupname}.png')
         except Exception as e:
             print(e)
 
@@ -215,7 +216,7 @@ class ExcelSchedule(object):
                 return elem
 
     @classmethod
-    def excel_reading_img(cls, groupname, background, filename):
+    def excel_reading_img(cls, groupname: str, background: str, filename: str) -> None:
         """Расписание на день в картинке"""
         try:
             mainfont = ImageFont.truetype("impact.ttf", size=35)
@@ -247,7 +248,7 @@ class Util(object):
     """Утилитарные функции"""
 
     @staticmethod
-    def img_clear(path):
+    def img_clear(path: str) -> None:
         """Удаление всех картинок по заданному пути"""
         try:
             imgs = glob.glob(path)
@@ -261,7 +262,7 @@ class GatherTags(object):
     """Функции обработки названий групп/тэгов"""
 
     @staticmethod
-    def tagsparse():
+    def tagsparse() -> tuple:
         """Получение названий групп и тэгов"""
         try:
             url = 'http://dmitrov-dubna.ru/shedule/cg.htm'
@@ -282,7 +283,7 @@ class GatherTags(object):
             raise e
 
     @classmethod
-    def tagsprettify(cls):
+    def tagsprettify(cls) -> dict:
         """Создание словаря Группа:Тэг"""
         try:
             x, z = cls.tagsparse()
@@ -300,7 +301,7 @@ class GatherTags(object):
             print(e)
 
     @staticmethod
-    def tagsearch(groupname, tags):
+    def tagsearch(groupname: str, tags: dict) -> None:
         """Возвращает первый найденный тэг по номеру группы"""
         try:
             for i in tags:
@@ -311,7 +312,7 @@ class GatherTags(object):
             print(e)
 
     @classmethod
-    def grouplist_create(cls):
+    def grouplist_create(cls) -> list:
         """Создаёт список групп"""
         final = []
         for i in cls.tagsprettify():
@@ -319,7 +320,7 @@ class GatherTags(object):
         return final
 
     @staticmethod
-    def groupname_validation(groupname, grouplist):
+    def groupname_validation(groupname: str, grouplist: list) -> bool:
         """Проверяет наличие группы в списке групп"""
         try:
             for i in grouplist:
