@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
-import glob
 import requests
-import re
-import xlrd
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 from .Util import Util

@@ -16,7 +16,7 @@ class RaspBot:
         self.token = self.config['bot']['token']
         self.id = self.config['bot']['pubid']
         """Подключение бота из класса BotHandler"""
-        self.bot = BotHandler(self.token, self.id)
+        self.bot = vkUtils.BotHandler(self.token, self.id)
         """Открываем необходимые файлы"""
         try:
             self.tags = GatherTags.tagsprettify()
