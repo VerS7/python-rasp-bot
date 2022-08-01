@@ -6,6 +6,7 @@ import re
 import xlrd
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
+from .Util import Util
 
 
 class Schedule(object):
