@@ -5,7 +5,7 @@ import os
 import shutil
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
-from BotUtils import Util
+from .Util import Util
 
 
 class BotHandler(vk_api.VkApi):

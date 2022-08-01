@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import configparser
-from BotUtils import *
-from vkUtils import BotHandler
+from rasp_api import *
 from vk_api.bot_longpoll import VkBotEventType
 
 
