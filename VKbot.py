@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Данный бот не обновляется
+Советую использовать версию VKbotBOT
+"""
 import vk_api
 import time
 import configparser
