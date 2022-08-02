@@ -3,6 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
 from .Util import Util
+from .GatherTags import GatherTags
 
 
 class Schedule(object):
