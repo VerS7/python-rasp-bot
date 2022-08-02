@@ -26,7 +26,7 @@ class BotHandler(vk_api.VkApi):
             logging.error(exc)
             raise exc
 
-    def send_image(self, attachment: str, message=None) -> int:
+    def send_image(self, attachment, message=None):
         """Функция отправки сообщения с картинкой"""
         try:
             photo = self.upload.photo_messages(attachment)

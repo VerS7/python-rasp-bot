@@ -11,7 +11,7 @@ class Schedule(object):
     size = (1200, 1500)
     """Функции с расписанием"""
     @staticmethod
-    def rasparse(url: str) -> list:
+    def rasparse(url):
         """Вычленение текста расписания с сайта по url"""
         try:
             api = requests.get(url)
@@ -27,7 +27,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def weekreading(cls, groupname: str, tags: dict, urltype='cg') -> tuple:
+    def weekreading(cls, groupname, tags, urltype='cg'):
         """Недельное расписание ДИНО"""
         try:
             url = 'http://dmitrov-dubna.ru/shedule/{0}{1}.htm'.format(urltype, GatherTags.tagsearch(groupname, tags))
@@ -47,7 +47,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def reading(cls, groupname: str) -> list:
+    def reading(cls, groupname):
         """Расписание на день в виде строки"""
         try:
             url = "http://dmitrov-dubna.ru/shedule/hg.htm"
@@ -68,7 +68,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def reading_img(cls, groupname: str, background: str) -> None:
+    def reading_img(cls, groupname, background):
         """Расписание на день в картинке"""
         try:
             mainfont = ImageFont.truetype("impact.ttf", size=35)
@@ -93,12 +93,13 @@ class Schedule(object):
             img.text((120, 265), " ".join(final), font=mainfont, fill=(86, 131, 172))
             img.text((290, 1300), update, font=otherfont, fill=(86, 131, 172))
             image = back.resize(cls.size)
-            image.save(f'temp/rasp.png')
+            #image.save(f'temp/rasp.png')
+            return image
         except Exception as e:
             print(e)
 
     @staticmethod
-    def weekreading_chuck(lst: list) -> list:
+    def weekreading_chuck(lst):
         """Разделение недельного расписания по дням"""
         try:
             rasp = []
@@ -117,7 +118,7 @@ class Schedule(object):
             print(e)
 
     @classmethod
-    def weekreading_img(cls, groupname: str, background: str, tags: dict, urltype='cg') -> None:
+    def weekreading_img(cls, groupname, background, tags, urltype='cg'):
         """Недельное/основное расписание картинками"""
         try:
             mainfont = ImageFont.truetype("impact.ttf", size=35)
@@ -126,6 +127,7 @@ class Schedule(object):
             lst = cls.weekreading_chuck(txt)
             final = []
             rasp = []
+            pilobjs = []
             for elem in lst:
                 for line in elem:
                     if len(line.split(" ")) > 5:
@@ -139,7 +141,7 @@ class Schedule(object):
                     final.append(line)
                 rasp.append(final.copy())
                 final.clear()
-            Util.img_clear(f'temp/{urltype}/*')
+            #Util.img_clear(f'temp/{urltype}/*')
             for elem in rasp:
                 back = Image.open(background)
                 img = ImageDraw.Draw(back)
@@ -148,6 +150,8 @@ class Schedule(object):
                 img.text((120, 265), " ".join(elem[1:]), font=mainfont, fill=(86, 131, 172))
                 img.text((290, 1300), update.strip(), font=otherfont, fill=(86, 131, 172))
                 image = back.resize(cls.size)
-                image.save(f'temp/{urltype}/{rasp.index(elem)}_{groupname}.png')
+                pilobjs.append(image)
+                #image.save(f'temp/{urltype}/{rasp.index(elem)}_{groupname}.png')
+            return pilobjs
         except Exception as e:
             print(e)

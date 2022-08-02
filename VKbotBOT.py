@@ -50,8 +50,8 @@ class RaspBot:
                     if len(message.split()) == 2:
                         if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
                             self.bot.send_message("Подождите, идёт обработка.")
-                            Schedule.reading_img(message.split()[1], "raspback.png")
-                            self.bot.send_image('temp/rasp.png', 'Расписание для группы {0}'.format(message.split()[1]))
+                            img = Util.pilobj_to_bytes(Schedule.reading_img(message.split()[1], "raspback.png"))
+                            self.bot.send_image(img, 'Расписание для группы {0}'.format(message.split()[1]))
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
@@ -62,8 +62,8 @@ class RaspBot:
                     if len(message.split()) == 2:
                         if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
                             self.bot.send_message("Подождите, идёт обработка.")
-                            Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags)
-                            self.bot.send_images(glob.glob('temp/cg/*.png'), 'Недельное расписание для группы {0}'.format(message.split()[1]))
+                            imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags))
+                            self.bot.send_images(imgs, 'Недельное расписание для группы {0}'.format(message.split()[1]))
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
@@ -74,8 +74,8 @@ class RaspBot:
                     if len(message.split()) == 2:
                         if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
                             self.bot.send_message("Подождите, идёт обработка.")
-                            Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags, urltype='bg')
-                            self.bot.send_images(glob.glob('temp/bg/*.png'), 'Основное расписание для группы {0}'.format(message.split()[1]))
+                            imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags, urltype='bg'))
+                            self.bot.send_images(imgs, 'Основное расписание для группы {0}'.format(message.split()[1]))
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
