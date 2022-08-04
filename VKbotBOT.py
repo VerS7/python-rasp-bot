@@ -8,6 +8,8 @@ from vk_api.bot_longpoll import VkBotEventType
 class RaspBot:
     """Код работы с ВК"""
     def __init__(self):
+        print('Бот запущен.')
+        print(time.ctime(time.time()))
         """Инициализация необходимых параметров"""
         self.config = configparser.ConfigParser()
         self.config.read("settings.ini")
@@ -84,6 +86,4 @@ class RaspBot:
 
 if __name__ == '__main__':
     VKbot = RaspBot()
-    print('Бот запущен.')
-    print(time.ctime(time.time()))
     VKbot.main()
