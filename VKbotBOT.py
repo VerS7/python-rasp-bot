@@ -14,6 +14,7 @@ class RaspBot:
         self.config = configparser.ConfigParser()
         self.config.read("settings.ini")
         Schedule.size = int(self.config['image']['width']), int(self.config['image']['length'])
+        self.stats = StatisticsHandler('statistics.csv')
         """Токен и ID сообщества"""
         self.token = self.config['bot']['token']
         self.id = self.config['bot']['pubid']
@@ -42,10 +43,12 @@ class RaspBot:
                 if self.comlist[0] in message.lower():
                     """Запрос информации о боте"""
                     self.bot.send_message(self.info)
+                    self.stats.write_stats(event)
 
                 elif self.comlist[1] in message.lower():
                     """Запрос доступных групп"""
                     self.bot.send_message("\n".join(self.grouplist))
+                    self.stats.write_stats(event)
 
                 elif self.comlist[4] in message.lower():
                     """Запрос расписания картинкой"""
@@ -54,6 +57,7 @@ class RaspBot:
                             self.bot.send_message("Подождите, идёт обработка.")
                             img = Util.pilobj_to_bytes(Schedule.reading_img(message.split()[1], "raspback.png"))
                             self.bot.send_image(img, 'Расписание для группы {0}'.format(message.split()[1]))
+                            self.stats.write_stats(event)
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
@@ -66,6 +70,7 @@ class RaspBot:
                             self.bot.send_message("Подождите, идёт обработка.")
                             imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags))
                             self.bot.send_images(imgs, 'Недельное расписание для группы {0}'.format(message.split()[1]))
+                            self.stats.write_stats(event)
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
@@ -78,6 +83,7 @@ class RaspBot:
                             self.bot.send_message("Подождите, идёт обработка.")
                             imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags, urltype='bg'))
                             self.bot.send_images(imgs, 'Основное расписание для группы {0}'.format(message.split()[1]))
+                            self.stats.write_stats(event)
                         else:
                             self.bot.send_message("Произошла ошибка.")
                     else:
