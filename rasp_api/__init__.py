@@ -6,3 +6,4 @@ from .Util import Util
 from .vkUtils import BotHandler
 from .updateListener import UpdateListener
 from .statistics import Statistics, StatisticsHandler
+from .annunciator import Annunciator

@@ -4,9 +4,14 @@ from VKbotBOT import RaspBot
 
 
 """Main thread"""
-bot = RaspBot()
-main_thread = threading.Thread(target=bot.main)
+raspbot = RaspBot()
+main_thread = threading.Thread(target=raspbot.main)
 main_thread.start()
+
+"""Announces thread"""
+ann = rasp_api.Annunciator(raspbot.bot)
+#annons_thread = threading.Thread(target=ann.run())
+#annons_thread.start()
 
 """Updater thread"""
 updater = rasp_api.UpdateListener(delay=1)
