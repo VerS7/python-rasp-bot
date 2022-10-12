@@ -8,7 +8,7 @@ main_thread = threading.Thread(target=raspbot.main)
 main_thread.start()
 
 """Announces thread"""
-ann = rasp_api.Annunciator(raspbot.bot, raspbot)
+ann = rasp_api.Annunciator(raspbot.bot)
 annons_thread = threading.Thread(target=ann.run())
 annons_thread.start()
 
