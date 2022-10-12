@@ -11,7 +11,7 @@ class GatherTags(object):
     def tagsparse() -> tuple:
         """Получение названий групп и тэгов"""
         try:
-            url = 'http://dmitrov-dubna.ru/shedule/cg.htm'
+            url = 'http://shedule.uni-dmitrov.ru/cg.htm'
             api = requests.get(url)
             content = api.text
             soup = BeautifulSoup(content, 'html.parser')

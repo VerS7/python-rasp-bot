@@ -30,7 +30,7 @@ class Schedule(object):
     def weekreading(cls, groupname, tags, urltype='cg'):
         """Недельное расписание ДИНО"""
         try:
-            url = 'http://dmitrov-dubna.ru/shedule/{0}{1}.htm'.format(urltype, GatherTags.tagsearch(groupname, tags))
+            url = 'http://shedule.uni-dmitrov.ru/{0}{1}.htm'.format(urltype, GatherTags.tagsearch(groupname, tags))
             api = requests.get(url)
             content = api.text
             soup = BeautifulSoup(content, 'html.parser')
@@ -50,7 +50,7 @@ class Schedule(object):
     def reading(cls, groupname):
         """Расписание на день в виде строки"""
         try:
-            url = "http://dmitrov-dubna.ru/shedule/hg.htm"
+            url = "http://shedule.uni-dmitrov.ru/hg.htm"
             text = cls.rasparse(url)
             rasp = []
             flag = False
@@ -59,7 +59,7 @@ class Schedule(object):
                 if groupname in line:
                     flag = True
                 if flag is True:
-                    if line == "6":
+                    if "6 Пара" in line:
                         break
                     rasp.append(str(line) + '\n')
             rasp.append(str(text[len(text) - 1]) + '\n')

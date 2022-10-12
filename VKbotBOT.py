@@ -94,12 +94,11 @@ class RaspBot:
                     if len(message.split()) == 2:
                         Annunciator.add_to_chatlist(Annunciator.chats_read(), self.bot.peer_id, message.split()[1])
                         self.bot.send_message(f"Чат с ID:{self.bot.peer_id} успешно добавлен в систему оповещний!")
-                        #x = Annunciator(self.bot)
-                        #x.run()
                     else:
                         self.bot.send_message("Отсутствует номер группы.")
 
-                elif "!checkid" in message.lower():
+                #Debug Commands
+                elif "%checkid" in message.lower():
                     """Check chat_id"""
                     self.bot.send_message(self.bot.peer_id)
 

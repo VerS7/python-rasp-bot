@@ -3,6 +3,7 @@ from io import BytesIO
 import glob
 import os
 
+
 class Util(object):
     """Утилитарные функции"""
     @staticmethod
