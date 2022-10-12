@@ -12,7 +12,7 @@ class UpdateListener:
     def updater(self):
         """Проверяет обновление на сайте."""
         try:
-            api = requests.get("http://dmitrov-dubna.ru/shedule/hg.htm")
+            api = requests.get("http://shedule.uni-dmitrov.ru/hg.htm")
             content = api.text
             soup = BeautifulSoup(content, 'html.parser')
             soup = soup.select('.ref')
