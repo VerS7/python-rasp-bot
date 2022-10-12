@@ -13,6 +13,6 @@ annons_thread = threading.Thread(target=ann.run())
 annons_thread.start()
 
 """Updater thread"""
-updater = rasp_api.UpdateListener(delay=3600)
-updater_thread = threading.Thread(target=updater.run)
-updater_thread.start()
+#updater = rasp_api.UpdateListener(delay=3600)
+#updater_thread = threading.Thread(target=updater.run)
+#updater_thread.start()

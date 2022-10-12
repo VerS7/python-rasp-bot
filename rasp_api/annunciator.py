@@ -30,20 +30,22 @@ class Annunciator:
         self.bh.peer_id = chat_id
         self.bh.send_image(img, f"Оповещение расписания для группы {groupname}")
 
+    def chats_send(self):
+        self.chats = Annunciator.chats_read()
+        for elem in self.chats:
+            try:
+                self.send_daily(elem, self.chats.get(elem))
+            except Exception as e:
+                print(f'Something went wrong in announciator itering group: {elem}, chat_id: {self.chats.get(elem)}', e)
+                continue
+
     def run(self):
         """Run announce system in timing"""
-        print(datetime.now().strftime("%H:%M"))
         run = True
         while run:
             current_time = datetime.now().strftime("%H:%M")
             if current_time in self.timings:
-                self.chats = Annunciator.chats_read()
-                for elem in self.chats:
-                    try:
-                        self.send_daily(elem, self.chats.get(elem))
-                    except Exception as e:
-                        print(f'Something went wrong in announciator itering group: {elem}, chat_id: {self.chats.get(elem)}', e)
-                        continue
+                self.chats_send()
                 """Переключатель оповещения"""
                 run = False
                 time.sleep(60)
