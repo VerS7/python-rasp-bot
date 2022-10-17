@@ -33,6 +33,7 @@ class RaspBot:
             print('Не удалось получить доступ к необходимым файлам.')
             exit()
 
+    @loggit
     def main(self):
         """Цикл прочитки сообщений ботом"""
         for event in self.bot.botlongpoll.listen():
@@ -47,7 +48,7 @@ class RaspBot:
 
                 elif self.comlist[1] in message.lower():
                     """Запрос доступных групп"""
-                    self.bot.send_message("\n".join(self.grouplist))
+                    self.bot.send_messages("\n".join())
                     self.stats.write_stats(event)
 
                 elif self.comlist[4] in message.lower():
