@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import threading
 import rasp_api
 from VKbotBOT import RaspBot
@@ -9,7 +10,7 @@ main_thread.start()
 
 """Announces thread"""
 ann = rasp_api.Annunciator(raspbot.bot)
-annons_thread = threading.Thread(target=ann.run())
+annons_thread = threading.Thread(target=ann.run)
 annons_thread.start()
 
 """Updater thread"""

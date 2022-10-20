@@ -33,6 +33,7 @@ class RaspBot:
             print('Не удалось получить доступ к необходимым файлам.')
             exit()
 
+    @loopexcepter
     @loggit
     def main(self):
         """Цикл прочитки сообщений ботом"""
@@ -48,7 +49,7 @@ class RaspBot:
 
                 elif self.comlist[1] in message.lower():
                     """Запрос доступных групп"""
-                    self.bot.send_messages("\n".join())
+                    self.bot.send_message("\n".join(self.comlist))
                     self.stats.write_stats(event)
 
                 elif self.comlist[4] in message.lower():
@@ -113,5 +114,3 @@ class RaspBot:
 if __name__ == '__main__':
     VKbot = RaspBot()
     VKbot.main()
-
-

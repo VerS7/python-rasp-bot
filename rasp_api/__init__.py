@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+rasp api for rasp bot
+"""
 from .Schedule import Schedule
 #from .ExcelSchedule import ExcelSchedule
 from .GatherTags import GatherTags
@@ -8,3 +11,4 @@ from .updateListener import UpdateListener
 from .statistics import Statistics, StatisticsHandler
 from .annunciator import Annunciator
 from .simplelogger import *
+
