@@ -1,37 +1,30 @@
 # -*- coding: utf-8 -*-
 import time
-import configparser
 from rasp_api import *
 from vk_api.bot_longpoll import VkBotEventType
 
 
 class RaspBot:
-    """Код работы с ВК"""
+    """Тело ВК-бота"""
     def __init__(self):
         print('Бот запущен.')
         print(time.ctime(time.time()))
+
         """Инициализация необходимых параметров"""
-        self.config = configparser.ConfigParser()
-        self.config.read("settings.ini")
-        Schedule.size = int(self.config['image']['width']), int(self.config['image']['length'])
-        self.stats = StatisticsHandler('statistics.csv')
-        """Токен и ID сообщества"""
-        self.token = self.config['bot']['token']
-        self.id = self.config['bot']['pubid']
-        """Подключение бота из класса BotHandler"""
-        self.bot = vkUtils.BotHandler(self.token, self.id)
-        """Открываем необходимые файлы"""
-        try:
-            self.tags = GatherTags.tagsprettify()
-            self.grouplist = GatherTags.grouplist_create()
-            with open("info.txt", "r", encoding="utf-8") as info:
-                self.info = info.read()
-            with open("comlist.txt", "r", encoding="utf-8") as comlist:
-                self.comlist = [row.strip() for row in comlist]
-        except Exception as e:
-            print(e)
-            print('Не удалось получить доступ к необходимым файлам.')
-            exit()
+        self.data = DataInit(config="settings.ini",
+                             statfile="statistics.csv",
+                             infofile="info.txt",
+                             commandsfile="comlist.txt")
+
+        Schedule.size = self.data.size                      # Размер изображения расписания
+        self.stats = self.data.stats                        # Статистика вызовов
+        self.token = self.data.token                        # ВК токен
+        self.id = self.data.id                              # ВК айди
+        self.bot = vkUtils.BotHandler(self.token, self.id)  # Bothandler
+        self.tags = self.data.tags                          # Тэги
+        self.grouplist = self.data.grouplist                # Группы
+        self.info = self.data.info                          # Информация
+        self.comlist = self.data.comlist                    # команды
 
     @loopexcepter
     @loggit
@@ -99,7 +92,7 @@ class RaspBot:
                     else:
                         self.bot.send_message("Отсутствует номер группы.")
 
-                #Debug Commands
+                # Debug Commands
                 elif "%checkid" in message.lower():
                     """Посмотреть айди чата"""
                     self.bot.send_message(self.bot.peer_id)
