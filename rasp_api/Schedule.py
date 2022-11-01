@@ -59,7 +59,7 @@ class Schedule(object):
                 if groupname in line:
                     flag = True
                 if flag is True:
-                    if "6 Пара" in line:
+                    if "6" in line or "6 Пара" in line:
                         break
                     rasp.append(str(line) + '\n')
             rasp.append(str(text[len(text) - 1]) + '\n')
