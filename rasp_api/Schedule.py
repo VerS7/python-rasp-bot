@@ -48,10 +48,9 @@ class Schedule:
 
     @classmethod
     @silentloggit
-    def reading(cls, groupname: str):
+    def reading(cls, groupname: str, groups=__groups):
         """Расписание на день в виде строки"""
         url = "http://dmitrov-dubna.ru/shedule/hg.htm"
-        groups = GatherTags.grouplist_create()
         text = cls.rasparse(url)
         rasp = []
         flag = False
