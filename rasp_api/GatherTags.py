@@ -11,7 +11,7 @@ class GatherTags(object):
     def tagsparse() -> tuple:
         """Получение названий групп и тэгов"""
         try:
-            url = 'http://shedule.uni-dmitrov.ru/cg.htm'
+            url = 'http://dmitrov-dubna.ru/shedule/cg.htm'
             api = requests.get(url)
             content = api.text
             soup = BeautifulSoup(content, 'html.parser')
@@ -47,13 +47,12 @@ class GatherTags(object):
             print(e)
 
     @staticmethod
-    def tagsearch(groupname: str, tags: dict) -> None:
+    def tagsearch(groupname: str, tags: dict):
         """Возвращает первый найденный тэг по номеру группы"""
         try:
             for i in tags:
                 if groupname in i:
                     return tags.get(i)
-            return None
         except Exception as e:
             print(e)
 
