@@ -8,10 +8,10 @@ from rasp_api.simplelogger import loggit
 
 class Annunciator:
     """Система оповещений по таймингам"""
-    def __init__(self, bot_handler: vkUtils.BotHandler, delay=1):
+    def __init__(self, bot_handler: vkUtils.BotHandler, delay=1, timings=['19:00', "06:00"]):
         self.bh = bot_handler
         self.chats = Annunciator.chats_read()
-        self.timings = ['19:00', "05:00", "00:00"]
+        self.timings = timings
         self.delay = delay
 
     @staticmethod

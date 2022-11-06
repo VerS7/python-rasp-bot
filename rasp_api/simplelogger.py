@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import types
 from functools import wraps
 from datetime import date
 from time import strftime, gmtime
@@ -27,22 +26,13 @@ def loggit(func):
 
 def silentloggit(func):
     """Тихое логгирование в консоль"""
-    if isinstance(func, types.MethodType):
-        @wraps(func)
-        def wrapped(cls, *args, **kwargs):
-            try:
-                return func(cls, *args, **kwargs)
-            except Exception as e:
-                print(f"{date.today().strftime('%Y-%d-%m')} - {strftime('%H:%M:%S', gmtime())} | [{e.__class__}] | {func.__qualname__} :: {e}.")
-        return wrapped
-    elif isinstance(func, types.FunctionType):
-        @wraps(func)
-        def wrapped(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                print(f"{date.today().strftime('%Y-%d-%m')} - {strftime('%H:%M:%S', gmtime())} | [{e.__class__}] | {func.__qualname__} :: {e}.")
-        return wrapped
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"{date.today().strftime('%Y-%d-%m')} - {strftime('%H:%M:%S', gmtime())} | [{e.__class__}] | {func.__qualname__} :: {e}.")
+    return wrapped
 
 def loopexcepter(func):
     """Циклический перевызов функции при её отвале."""

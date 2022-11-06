@@ -4,14 +4,14 @@ import re
 from bs4 import BeautifulSoup
 
 
-class GatherTags(object):
+class GatherTags:
     """Функции обработки названий групп/тэгов"""
 
     @staticmethod
     def tagsparse() -> tuple:
         """Получение названий групп и тэгов"""
         try:
-            url = 'http://dmitrov-dubna.ru/shedule/cg.htm'
+            url = "http://dmitrov-dubna.ru/shedule/cg.htm"
             api = requests.get(url)
             content = api.text
             soup = BeautifulSoup(content, 'html.parser')
@@ -28,11 +28,11 @@ class GatherTags(object):
         except Exception as e:
             raise e
 
-    @classmethod
-    def tagsprettify(cls) -> dict:
+    @staticmethod
+    def tagsprettify() -> dict:
         """Создание словаря Группа:Тэг"""
         try:
-            x, z = cls.tagsparse()
+            x, z = GatherTags.tagsparse()
             y = []
             m = []
             final = {}
@@ -56,16 +56,16 @@ class GatherTags(object):
         except Exception as e:
             print(e)
 
-    @classmethod
-    def grouplist_create(cls) -> list:
+    @staticmethod
+    def grouplist_create() -> list:
         """Создаёт список групп"""
         final = []
-        for i in cls.tagsprettify():
+        for i in GatherTags.tagsprettify():
             final.append(i)
         return final
 
     @staticmethod
-    def groupname_validation(groupname: str, grouplist: list) -> bool:
+    def groupname_validation(groupname: str, grouplist: list):
         """Проверяет наличие группы в списке групп"""
         try:
             for i in grouplist:

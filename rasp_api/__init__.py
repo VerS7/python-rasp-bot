@@ -3,7 +3,7 @@
 rasp api for rasp bot
 """
 from .Schedule import Schedule
-#from .ExcelSchedule import ExcelSchedule
+#from .ExcelSchedule import ExcelSchedule //Не используется | устарело
 from .GatherTags import GatherTags
 from .Util import Util
 from .vkUtils import BotHandler

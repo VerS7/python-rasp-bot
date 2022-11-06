@@ -26,8 +26,8 @@ class StatisticsHandler(Statistics):
     def __init__(self, filepath):
         super().__init__(filepath)
 
-    @classmethod
-    def to_dict(cls, event):
+    @staticmethod
+    def to_dict(event):
         """Создаёт dict object из vk event"""
         chat_id = event.obj['message']['peer_id']
         message = event.obj['message']['text'].split()[0]

@@ -28,9 +28,9 @@ class Schedule:
         out = '|'.join(out).replace(':|', ': ').split('|')
         return out
 
-    @classmethod
+    @staticmethod
     @silentloggit
-    def weekreading(cls, groupname: str, tags: dict, urltype='cg'):
+    def weekreading(groupname: str, tags: dict, urltype='cg'):
         """Недельное расписание ДИНО"""
         url = 'http://dmitrov-dubna.ru/shedule/{0}{1}.htm'.format(urltype, GatherTags.tagsearch(groupname, tags))
         api = requests.get(url)
@@ -46,12 +46,12 @@ class Schedule:
         out = '|'.join(out).replace(':|', ': ').split('|')
         return out, group, update
 
-    @classmethod
+    @staticmethod
     @silentloggit
-    def reading(cls, groupname: str, groups=__groups):
+    def reading(groupname: str, groups=__groups):
         """Расписание на день в виде строки"""
         url = "http://dmitrov-dubna.ru/shedule/hg.htm"
-        text = cls.rasparse(url)
+        text = Schedule.rasparse(url)
         rasp = []
         flag = False
         rasp.append(str(text[0]) + '\n')
@@ -65,15 +65,15 @@ class Schedule:
         rasp.append(str(text[len(text) - 1]) + '\n')
         return rasp
 
-    @classmethod
+    @staticmethod
     @silentloggit
-    def reading_img(cls, groupname: str, background: str):
+    def reading_img(groupname: str, background: str):
         """Расписание на день в картинке"""
         mainfont = ImageFont.truetype("impact.ttf", size=35)
         otherfont = ImageFont.truetype("impact.ttf", size=50)
         back = Image.open(background)
         img = ImageDraw.Draw(back)
-        txt = cls.reading(groupname)
+        txt = Schedule.reading(groupname)
         time = txt[0]
         group = txt[1]
         update = txt[len(txt) - 1]
@@ -90,7 +90,7 @@ class Schedule:
         img.text((490, 160), group, font=otherfont, fill=(86, 131, 172))
         img.text((120, 265), " ".join(final), font=mainfont, fill=(86, 131, 172))
         img.text((290, 1300), update, font=otherfont, fill=(86, 131, 172))
-        image = back.resize(cls.size)
+        image = back.resize(Schedule.size)
         return image
 
     @staticmethod
@@ -110,14 +110,14 @@ class Schedule:
                 rasp.pop(rasp.index(elem))
         return rasp[0:7]
 
-    @classmethod
+    @staticmethod
     @silentloggit
-    def weekreading_img(cls, groupname, background, tags, urltype='cg'):
+    def weekreading_img(groupname, background, tags, urltype='cg'):
         """Недельное/основное расписание картинками"""
         mainfont = ImageFont.truetype("impact.ttf", size=35)
         otherfont = ImageFont.truetype("impact.ttf", size=50)
-        txt, group, update = cls.weekreading(groupname, tags, urltype=urltype)
-        lst = cls.weekreading_chuck(txt)
+        txt, group, update = Schedule.weekreading(groupname, tags, urltype=urltype)
+        lst = Schedule.weekreading_chuck(txt)
         final = []
         rasp = []
         pilobjs = []
@@ -141,6 +141,6 @@ class Schedule:
             img.text((410, 160), group, font=otherfont, fill=(86, 131, 172))
             img.text((120, 265), " ".join(elem[1:]), font=mainfont, fill=(86, 131, 172))
             img.text((290, 1300), update.strip(), font=otherfont, fill=(86, 131, 172))
-            image = back.resize(cls.size)
+            image = back.resize(Schedule.size)
             pilobjs.append(image)
         return pilobjs

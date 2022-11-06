@@ -4,7 +4,7 @@ import glob
 import os
 
 
-class Util(object):
+class Util:
     """Утилитарные функции"""
     @staticmethod
     def img_clear(path: str) -> None:
