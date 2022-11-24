@@ -7,7 +7,7 @@ from vk_api.bot_longpoll import VkBotEventType
 class RaspBot:
     """Тело ВК-бота"""
     def __init__(self):
-        print('Бот запущен.')
+        print("Бот запущен.")
         print(time.ctime(time.time()))
 
         """Инициализация необходимых параметров"""
@@ -24,7 +24,14 @@ class RaspBot:
         self.tags = self.data.tags                          # Тэги
         self.grouplist = self.data.grouplist                # Группы
         self.info = self.data.info                          # Информация
-        self.comlist = self.data.comlist                    # команды
+        self.comlist = self.data.comlist                    # Команды
+
+        self.cmndHanler = commandHandler(self.bot,          # BotHandler
+                                         self.stats,        # Статистика вызовов
+                                         self.info,         # Информация
+                                         self.grouplist,    # Группы
+                                         self.comlist,      # Команды
+                                         self.tags)         # тэги
 
     @loopexcepter
     @loggit
@@ -32,76 +39,49 @@ class RaspBot:
         """Цикл прочитки сообщений ботом"""
         for event in self.bot.botlongpoll.listen():
             if event.type == VkBotEventType.MESSAGE_NEW:
-                message = event.obj['message']['text']
-                self.bot.peer_id = event.obj['message']['peer_id']
+                self.cmndHanler.set_event(event)
+                self.cmndHanler.set_peer(event)
 
-                if self.comlist[0] in message.lower():
+                if self.cmndHanler.validator.get_command() == "команды":
                     """Запрос информации о боте"""
-                    self.bot.send_message(self.info)
-                    self.stats.write_stats(event)
+                    self.cmndHanler.send_info()
 
-                elif self.comlist[1] in message.lower():
+                if self.cmndHanler.validator.get_command() == "группы":
                     """Запрос доступных групп"""
-                    self.bot.send_message("\n".join(self.comlist))
-                    self.stats.write_stats(event)
+                    self.cmndHanler.send_groups()
 
-                elif self.comlist[4] in message.lower():
-                    """Запрос расписания картинкой"""
-                    if len(message.split()) == 2:
-                        if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
-                            self.bot.send_message("Подождите, идёт обработка.")
-                            img = Util.pilobj_to_bytes(Schedule.reading_img(message.split()[1], "raspback.png"))
-                            self.bot.send_image(img, 'Расписание для группы {0}'.format(message.split()[1]))
-                            self.stats.write_stats(event)
-                        else:
-                            self.bot.send_message("Произошла ошибка.")
-                    else:
-                        self.bot.send_message("Отсутствует номер группы.")
+                if self.cmndHanler.validator.get_command() == "расп":
+                    """Запрос расписания"""
+                    self.cmndHanler.send_rasp()
 
-                elif self.comlist[2] in message.lower():
-                    """Запрос недельного расписания в картинках"""
-                    if len(message.split()) == 2:
-                        if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
-                            self.bot.send_message("Подождите, идёт обработка.")
-                            imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags))
-                            self.bot.send_images(imgs, 'Недельное расписание для группы {0}'.format(message.split()[1]))
-                            self.stats.write_stats(event)
-                        else:
-                            self.bot.send_message("Произошла ошибка.")
-                    else:
-                        self.bot.send_message("Отсутствует номер группы.")
+                if self.cmndHanler.validator.get_command() == "нрасп":
+                    """Запрос недельного расписания"""
+                    self.cmndHanler.send_weekrasp()
 
-                elif self.comlist[3] in message.lower():
-                    """Запрос основного расписания в картинках"""
-                    if len(message.split()) == 2:
-                        if GatherTags.groupname_validation(message.split()[1], self.grouplist) is True:
-                            self.bot.send_message("Подождите, идёт обработка.")
-                            imgs = Util.pilobjs_to_bytes(Schedule.weekreading_img(message.split()[1], "raspback.png", tags=self.tags, urltype='bg'))
-                            self.bot.send_images(imgs, 'Основное расписание для группы {0}'.format(message.split()[1]))
-                            self.stats.write_stats(event)
-                        else:
-                            self.bot.send_message("Произошла ошибка.")
-                    else:
-                        self.bot.send_message("Отсутствует номер группы.")
+                if self.cmndHanler.validator.get_command() == "орасп":
+                    """Запрос основного расписания"""
+                    self.cmndHanler.send_mainrasp()
 
-                elif self.comlist[6] in message.lower():
-                    """Добавить чат с запроса в систему оповещений"""
-                    if len(message.split()) == 2:
-                        Annunciator.add_to_chatlist(Annunciator.chats_read(), self.bot.peer_id, message.split()[1])
-                        self.bot.send_message(f"Чат с ID:{self.bot.peer_id} успешно добавлен в систему оповещений!")
-                    else:
-                        self.bot.send_message("Отсутствует номер группы.")
+                if self.cmndHanler.validator.get_command() == "оповещение":
+                    """Запрос на добавление в систему оповещений"""
+                    self.cmndHanler.add_to_annons()
 
-                # Debug Commands
-                elif "%checkid" in message.lower():
-                    """Посмотреть айди чата"""
-                    self.bot.send_message(self.bot.peer_id)
+                if self.cmndHanler.validator.get_command() == "checkid":
+                    pass
 
-                elif "%manualstart" in message.lower():
-                    """Ручной запуск оповещения"""
-                    if self.bot.peer_id == 406579945:
-                        manual = Annunciator(self.bot)
-                        manual.chats_send()
+                if self.cmndHanler.validator.get_command() == "manualstart":
+                    pass
+
+                # # Debug Commands
+                # elif "%checkid" in message.lower():
+                #     """Посмотреть айди чата"""
+                #     self.bot.send_message(self.bot.peer_id)
+                #
+                # elif "%manualstart" in message.lower():
+                #     """Ручной запуск оповещения"""
+                #     if self.bot.peer_id == 406579945:
+                #         manual = Annunciator(self.bot)
+                #         manual.chats_send()
 
 
 if __name__ == '__main__':
