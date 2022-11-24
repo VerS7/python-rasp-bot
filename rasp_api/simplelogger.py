@@ -12,7 +12,7 @@ logging.basicConfig(filename='./error.log', filemode='a')
 def loggit(func):
     """
     Логгирует в консоль и errors.log файл дату, время и ошибку.
-    Только для void методов
+    Только для методов
     """
     @wraps(func)
     def wrapped(self, *args, **kwargs):
@@ -24,6 +24,7 @@ def loggit(func):
             logging.error(msg=f" | {date.today().strftime('%Y-%d-%m')} - {strftime('%H:%M:%S', gmtime())} [{e.__class__}] - {e}")
     return wrapped
 
+
 def silentloggit(func):
     """Тихое логгирование в консоль"""
     @wraps(func)
@@ -33,6 +34,7 @@ def silentloggit(func):
         except Exception as e:
             print(f"{date.today().strftime('%Y-%d-%m')} - {strftime('%H:%M:%S', gmtime())} | [{e.__class__}] | {func.__qualname__} :: {e}.")
     return wrapped
+
 
 def loopexcepter(func):
     """Циклический перевызов функции при её отвале."""
