@@ -81,7 +81,7 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, list]:
     return group, get_update(), week
 
 
-def get_daily(groupname: str):
+def get_daily(groupname: str) -> list:
     """
     Возвращает list расписания на день по имени группы или None
     :param str groupname: номер/название группы
