@@ -2,7 +2,7 @@
 import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
-from rasp_api.simplelogger import loggit
+from bot_api.simplelogger import loggit
 
 
 class BotHandler(vk_api.VkApi):

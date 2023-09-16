@@ -6,7 +6,8 @@ class Validator:
         self.commands = commands
         self.grouplist = grouplist
         self.event = None
-        self.prefixes = ("!", ".", "/", "@", "#")
+        self.prefixes = ("!", ".", "/", "@", "#", "+")
+        self.adminchats = None
 
     def validate(self, group=None):
         if group is None:
@@ -14,15 +15,19 @@ class Validator:
         else:
             return self.get_command(), self.get_groupname()
 
-    def validate_admin(self):
-        ...
+    def validate_admin(self, group=None):
+        if None:
+            if group is None:
+                return self.get_command(), None
+            else:
+                return self.get_command(), self.get_groupname()
 
     def get_groupname(self):
         """Получить номер группы"""
         message = self.event.obj['message']['text']
         if self.get_command() is not None:
             for group in self.grouplist:
-                if message.lower().split()[1] in group:
+                if message.upper().split()[1] in group:
                     return self.grouplist[self.grouplist.index(group)]
 
     def get_prefix(self):
