@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-import requests
+from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from typing import Tuple
 
@@ -12,15 +12,16 @@ URL_RESULTS = "http://dmitrov-dubna.ru/shedule/vg.htm"
 URL_TEACHER = "http://dmitrov-dubna.ru/shedule/vp.htm"
 
 
-def parse_request(url: str) -> "BeautifulSoup":
-    """Парсит страницу по ссылке"""
-    try:
-        api = requests.get(url)
-    except Exception as e:
-        raise e
-    if api.status_code != 200:
-        raise requests.RequestException("Сайт не отвечает.")
-    return BeautifulSoup(api.text, 'html.parser')
+async def parse_request(url: str) -> "BeautifulSoup":
+    """
+    Парсит страницу по ссылке
+    :param str url: url-ссылка на стриницу
+    """
+    async with ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                raise Exception(f"Не удалось получить данные. Статус: {response.status}")
+            return BeautifulSoup(await response.text(), 'html.parser')
 
 
 def get_all_daily(soup: BeautifulSoup) -> dict:
@@ -78,7 +79,7 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, list]:
     return group, get_update(), week
 
 
-def get_daily_by_groupname(groupname: str):
+def get_daily(groupname: str):
     """
     Возвращает list расписания на день по имени группы или None
     :param str groupname: номер/название группы
@@ -110,9 +111,9 @@ def get_exact_update() -> tuple:
     raise Exception("Не удалось получить дату и время.")
 
 
-def get_all_teachers() -> list:
+def get_all_teachers(soup: BeautifulSoup) -> list:
     raise "Не определено. На будущее"
 
 
-def get_daily_teacher(teacher: str) -> list:
+def get_daily_teacher(teacher: str, soup: BeautifulSoup) -> list:
     raise "Не определено. На будущее"
