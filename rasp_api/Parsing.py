@@ -13,7 +13,10 @@ URL_TEACHER = "http://dmitrov-dubna.ru/shedule/vp.htm"
 
 
 def parse_request(url: str) -> "BeautifulSoup":
-    """Парсит страницу по ссылке"""
+    """
+    Парсит страницу по ссылке
+    :param str url: url-ссылка на страницу
+    """
     try:
         api = requests.get(url)
     except Exception as e:
