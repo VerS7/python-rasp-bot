@@ -41,5 +41,3 @@ def tag_search(groupname: str, tags: dict) -> Union[str, None]:
         if groupname in i:
             return tags.get(i)
     return None
-
-
