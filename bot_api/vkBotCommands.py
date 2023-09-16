@@ -5,7 +5,7 @@ from .msgValidator import Validator
 from .Schedule import Schedule
 from .Util import Util
 from .annunciator import Annunciator
-from simplelogger import loggit
+from .simplelogger import loggit, loggitf
 
 
 class commandHandler:
@@ -30,8 +30,8 @@ class commandHandler:
 
     def set_event(self, event):
         """Установка VK event"""
-        self.event = event
         self.validator.event = event
+        self.event = event
 
     @loggit
     def send_info(self):
@@ -39,6 +39,7 @@ class commandHandler:
         self.bot.send_message(self.info)
         self.stats.write_stats(self.event)
 
+    @loggit
     def send_groups(self):
         """Отправка доступных для запроса групп"""
         self.bot.send_message("\n".join(self.grouplist))
@@ -74,13 +75,26 @@ class commandHandler:
         else:
             self.bot.send_message("Отсутствует номер группы.")
 
+    @loggit
     def add_to_annons(self):
         """Добавить чат в систему оповещений"""
         if self.validator.get_groupname() is not None:
-            Annunciator.add_to_chatlist(Annunciator.chats_read(), self.bot.peer_id, self.validator.get_groupname())
-            self.bot.send_message(f"Чат с ID:{self.bot.peer_id} успешно добавлен в систему оповещений!")
+            if str(self.bot.peer_id) not in Annunciator.chats_read().keys():
+                Annunciator.add_to_chatlist(Annunciator.chats_read(), self.bot.peer_id, self.validator.get_groupname())
+                self.bot.send_message(f"Чат с ID:{self.bot.peer_id} || Группа:{self.validator.get_groupname()} успешно добавлен в систему оповещений!")
+            else:
+                self.bot.send_message("Данный чат уже находится в системе оповещений.")
         else:
             self.bot.send_message("Отсутствует номер группы.")
+
+    @loggit
+    def remove_from_annons(self):
+        """Удаляет чат из системы оповещений"""
+        if str(self.bot.peer_id) in Annunciator.chats_read().keys():
+            Annunciator.remove_from_chatlist(Annunciator.chats_read(), self.bot.peer_id)
+            self.bot.send_message(f"Чат с ID:{self.bot.peer_id} удалён из системы оповещений.")
+        else:
+            self.bot.send_message("Данный чат не находится в системе оповещений.")
 
     def debug_checkid(self):
         """Админ-команда для просмотра chat id"""

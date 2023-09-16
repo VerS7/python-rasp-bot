@@ -2,8 +2,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from typing import Tuple
-
+from typing import Tuple, List
 
 URL_DAILY = "http://dmitrov-dubna.ru/shedule/hg.htm"
 URL_WEEKLY = "http://dmitrov-dubna.ru/shedule/cg.htm"
@@ -47,7 +46,7 @@ def get_all_daily(soup: BeautifulSoup) -> dict:
     return groups
 
 
-def get_group_weekly(grouptag: str) -> Tuple[str, str, list]:
+def get_group_week(grouptag: str) -> Tuple[str, str, List[dict]]:
     """
     Возвращает недельное расписание для конкретной группы по groupname
     :param str grouptag: тэг конкретной группы
@@ -56,7 +55,7 @@ def get_group_weekly(grouptag: str) -> Tuple[str, str, list]:
     return __get_week_or_main(parse_request(URL_WEEKLY.replace("cg", f"bg{grouptag}")))
 
 
-def get_group_main(grouptag: str) -> Tuple[str, str, list]:
+def get_group_main(grouptag: str) -> Tuple[str, str, List[dict]]:
     """
     Возвращает основное расписание для конкретной группы по groupname
     :param str grouptag: номер/название группы
@@ -65,14 +64,17 @@ def get_group_main(grouptag: str) -> Tuple[str, str, list]:
     return __get_week_or_main(parse_request(URL_WEEKLY.replace("cg", f"cg{grouptag}")))
 
 
-def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, list]:
+def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
     week = []
     temp = []
     group = soup.find("div").find('h1').get_text().encode('latin1').decode('cp1251').split()[1]
     for elem in soup.select('.inf'):
         for row in list(elem)[5:]:
             if "\n" in row:
-                week.append(temp.copy())
+                if "День" not in temp[0]:  # Проверка на День Пара Неделя 2. Костыль :/
+                    day = temp[0][0]
+                    del temp[0][0]
+                    week.append({day: temp.copy()})
                 temp.clear()
             else:
                 text = row.get_text(strip=True, separator="|").encode('latin1').decode('cp1251').split("|")

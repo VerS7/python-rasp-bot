@@ -2,13 +2,14 @@
 import json
 import time
 from datetime import datetime
-from rasp_api import Schedule, Util, vkUtils
-from rasp_api.simplelogger import loggit
+from rasp_api import Schedule
+from bot_api import Util, vkUtils
+from bot_api.simplelogger import loggit
 
 
 class Annunciator:
     """Система оповещений по таймингам"""
-    def __init__(self, bot_handler: vkUtils.BotHandler, delay=1, timings=['19:00', "06:00"]):
+    def __init__(self, bot_handler: vkUtils.BotHandler, delay=1, timings=('19:00', "06:00")):
         self.bh = bot_handler
         self.chats = Annunciator.chats_read()
         self.timings = timings
@@ -19,6 +20,13 @@ class Annunciator:
         """Добавляет chat_id в базу оповещений json"""
         with open("chats_list.json", 'w', encoding='utf-8') as chats:
             chat_list[chat_id] = groupname
+            json.dump(chat_list, chats)
+
+    @staticmethod
+    def remove_from_chatlist(chat_list: dict, chat_id: int):
+        """Удаляет chat_id из базы оповещений json"""
+        with open("chats_list.json", 'w', encoding='utf-8') as chats:
+            del chat_list[str(chat_id)]
             json.dump(chat_list, chats)
 
     @staticmethod
@@ -52,7 +60,7 @@ class Annunciator:
             time.sleep(self.delay)
             if current_time in self.timings:
                 self.chats_send()
-                """Переключатель оповещения"""
+                # Переключатель оповещения
                 run = False
                 time.sleep(60)
                 run = True
