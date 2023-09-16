@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
-from aiohttp import ClientSession
+import requests
 from bs4 import BeautifulSoup
 from typing import Tuple
 
@@ -12,16 +12,15 @@ URL_RESULTS = "http://dmitrov-dubna.ru/shedule/vg.htm"
 URL_TEACHER = "http://dmitrov-dubna.ru/shedule/vp.htm"
 
 
-async def parse_request(url: str) -> "BeautifulSoup":
-    """
-    Парсит страницу по ссылке
-    :param str url: url-ссылка на стриницу
-    """
-    async with ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                raise Exception(f"Не удалось получить данные. Статус: {response.status}")
-            return BeautifulSoup(await response.text(), 'html.parser')
+def parse_request(url: str) -> "BeautifulSoup":
+    """Парсит страницу по ссылке"""
+    try:
+        api = requests.get(url)
+    except Exception as e:
+        raise e
+    if api.status_code != 200:
+        raise requests.RequestException("Сайт не отвечает.")
+    return BeautifulSoup(api.text, 'html.parser')
 
 
 def get_all_daily(soup: BeautifulSoup) -> dict:
