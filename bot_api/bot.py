@@ -1,6 +1,6 @@
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
-from typing import Union, List
+from typing import Union, List, Callable
 from aiohttp import ClientSession, FormData
 from utility import *
 import asyncio
@@ -28,7 +28,7 @@ class AsyncVkBot:
                 message = event["object"]["message"]["text"]
                 if any(message.startswith(prefix) for prefix in ["%", "!", "^", "@"]):
                     if message.split()[0] in self.__commands.keys():
-                        self.__commands[message.split()[0]](peer, message)
+                        await self.__commands[message.split()[0]](peer, message)
 
     async def send_message(self, peer_id: str, message: str, attachment: Union[list, str, None] = None) -> int:
         """
@@ -88,15 +88,10 @@ class AsyncVkBot:
 
         return attachments
 
-    def run(self):
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.__main())
-        loop.run_until_complete(task)
-
     def command(self, command: Union[str, None] = None,
                 replaceable: bool = False,
                 placeholder: Union[str, None] = None,
-                admin: bool = False):
+                admin: bool = False) -> Callable:
         """
         :param str command: команда, которую слушает event listener
         :param bool replaceable: изменяется ли сообщение в процессе обработки
@@ -105,29 +100,47 @@ class AsyncVkBot:
         :return: command-wrapper
         """
         def __command(__func):
-            self.__commands[command] = __func
+            async def __wrapper(*args, **kwargs):
+                # Основная логика
+                if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
+                    message_id = await self.send_message(peer_id=args[0], message=placeholder)
 
-            def __wrapper(*args, **kwargs):
-                # TODO: плейсхолдер реализовать
-                print(args)
-                # self.send_message(args[0], args[1])
-                #
-                return __func(*args, **kwargs)
+                if admin:  # Если сообщение от админа
+                    raise "Не реализовано. На будущее"
+
+                result = __func(*args, **kwargs)
+                attachment = None
+
+                if len(result) == 3:
+                    attachment = await self.image_attachments(result[0], result[2])
+
+                await self.send_message(peer_id=result[0], message=result[1], attachment=attachment)
+
+            self.__commands[command] = __wrapper  # Отправка команды в пул доступных команд
 
             return __wrapper
 
         return __command
+
+    def run(self):
+        """
+        Запуск асинхронного бота
+        """
+        loop = asyncio.get_event_loop()
+        task = loop.create_task(self.__main())
+        loop.run_until_complete(task)
 
 
 t = "b43c55878dc7efb2ba857f47d389298d3aae540f72eba893c70eedc1e30109f50e770f3f45b052f180a04"
 p = 209586297
 a = AsyncVkBot(t, p)
 
+from rasp_api.Schedule import daily_image
 
-@a.command(command="!тест")
+
+@a.command(command="!тест", replaceable=True, placeholder="Подождите, идёт обработка...")
 def send_daily(peer, message):
-    print(peer, message)
-    print("выполнено")
+    return peer, f"всё работает! Команда:{message}", image_to_bytes(daily_image("0121-АС"))
 
 
 a.run()
