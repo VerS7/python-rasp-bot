@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 IMAGE_SIZE = (1200, 1500)
 MAIN_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=35)
 OTHER_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=50)
-BG_IMAGE = "./files/raspback.png"
+BG_IMAGE = "../files/raspback.png"
 
 
 def __prettify_for_image(schedule: list) -> list:
@@ -93,7 +93,12 @@ def __create_images(grouptag: str, rasp_type: str, resize_multiplier: Union[None
         rasp_image = ImageDraw.Draw(background)
         prettified = __prettify_for_image(list(*day.values()))
 
-        rasp_image.text((550, 100), str(*list(day.keys())), font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+        date = str(*list(day.keys()))
+        date_xy = (550, 100)
+        if len(date) > 8:
+            date_xy = (460, 100)
+
+        rasp_image.text(date_xy, date, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
         rasp_image.text((510, 160), group, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
         rasp_image.text((120, 240), "\n".join(prettified), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
         rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
@@ -110,7 +115,7 @@ def weekly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -
     :param resize_multiplier: Множитель размера изображения. 1 = default, 0.5 - изображение в 2 раза меньше
     :return: Список с PIL объектами изображений недельного расписания
     """
-    return __create_images(grouptag, "week", resize_multiplier)
+    return __create_images(grouptag, "week", resize_multiplier)[0:7]
 
 
 def mainly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -> List[Image.Image]:
@@ -121,5 +126,3 @@ def mainly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -
     :return: Список с PIL объектами изображений недельного расписания
     """
     return __create_images(grouptag, "week", resize_multiplier)
-
-
