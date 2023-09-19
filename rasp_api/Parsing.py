@@ -52,7 +52,7 @@ def get_group_week(grouptag: str) -> Tuple[str, str, List[dict]]:
     :param str grouptag: тэг конкретной группы
     :return: группа, обновление, недельное расписание
     """
-    return __get_week_or_main(parse_request(URL_WEEKLY.replace("cg", f"bg{grouptag}")))
+    return __get_week_or_main(parse_request(URL_WEEKLY.replace("cg", f"cg{grouptag}")))
 
 
 def get_group_main(grouptag: str) -> Tuple[str, str, List[dict]]:
@@ -61,7 +61,7 @@ def get_group_main(grouptag: str) -> Tuple[str, str, List[dict]]:
     :param str grouptag: номер/название группы
     :return: группа, обновление, основное расписание
     """
-    return __get_week_or_main(parse_request(URL_WEEKLY.replace("cg", f"cg{grouptag}")))
+    return __get_week_or_main(parse_request(URL_WEEKLY.replace("bg", f"bg{grouptag}")))
 
 
 def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
@@ -72,8 +72,13 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
         for row in list(elem)[5:]:
             if "\n" in row:
                 if "День" not in temp[0]:  # Проверка на День Пара Неделя 2. Костыль :/
-                    day = temp[0][0]
-                    del temp[0][0]
+                    if len(temp[0][0]) > 9:  # Проверка на полную дату в недельном расписании. Костыль :/
+                        day = f"{temp[0][0]}  {temp[0][1]}"
+                        del temp[0][0]  # Удаление полной даты
+                        del temp[0][0]  # Удаление дня недели
+                    else:
+                        day = temp[0][0]
+                        del temp[0][0]
                     week.append({day: temp.copy()})
                 temp.clear()
             else:
