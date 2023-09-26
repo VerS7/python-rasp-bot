@@ -1,26 +1,46 @@
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
-from typing import Callable, Union, List
+
+from typing import Callable, Union, List, Tuple
+
+from time import sleep
+
 from bot_api.commandParser import Command
+from rasp_api.LoggerConfig import *
 
 import asyncio
 
 
+EXC_DELAY = 10
+
+
 class AsyncVkBot:
-    def __init__(self, access_token: str, pub_id: int, prefixes="!#"):
+    def __init__(self, access_token: str, pub_id: int, prefixes: str = "!#"):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         :param prefixes: список доступных префиксов для команд
         """
-        self.session = TokenSession(access_token=access_token)
-        self.api = API(self.session)
-        self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
+        self.__access, self.__pubid = access_token, pub_id
+
+        self.session, self.api, self.longpoll = self.__connect(self.__access, self.__pubid)
 
         self.__prefixes = prefixes
 
         self.__commands = {}  # словарь {команда: функция} для вызовов функций из цикла обработки сообщений
+
+    def __connect(self, access_token: str, pub_id: int) -> Tuple[TokenSession, API, BotsLongPoll]:
+        """
+        :param str access_token: токен доступа группы ВК
+        :param int pub_id: id группы ВК
+        """
+
+        session = TokenSession(access_token=access_token)
+        api = API(session)
+        longpoll = BotsLongPoll(api, group_id=pub_id)
+
+        return session, api, longpoll
 
     async def __main(self):
         """
@@ -32,9 +52,10 @@ class AsyncVkBot:
                 peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
                 message = event["object"]["message"]["text"]  # текст сообщения
 
-                command = Command(message, self.__prefixes)   # обработка сообщения
-                if command.isCommand():                       # проверка на наличие команды
+                command = Command(message, self.__prefixes)                            # обработка сообщения
+                if command.isCommand() and command.command in self.__commands.keys():  # проверка на наличие команды
                     asyncio.create_task(self.__commands[command.command](peer, command.args))
+                    logging.info(f"Выполнена команда [{command.command} ({command.args})] PeerID: {peer}")
 
     async def send_message(self, peer_id: str, message: str, attachment: Union[list, str, None] = None) -> int:
         """
@@ -166,5 +187,8 @@ class AsyncVkBot:
                 loop = asyncio.get_event_loop()
                 task = loop.create_task(self.__main())
                 loop.run_until_complete(task)
-            except Exception as e:
-                asyncio.sleep(10)
+            except:
+                logging.warning(msg=f"Ошибка в основном цикле. Delay: {EXC_DELAY}")
+                asyncio.run(self.session.close())
+                sleep(EXC_DELAY)
+                self.session, self.api, self.longpoll = self.__connect(self.__access, self.__pubid)
