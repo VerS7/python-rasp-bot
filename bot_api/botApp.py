@@ -5,7 +5,7 @@ from rasp_api.groupValidator import get_tag, validate_groupname
 
 from bot_api.asyncBot import AsyncVkBot
 from bot_api.chatsConnector import Chats
-from bot_api.utility import *
+from bot_api.Utility import *
 
 from os import getenv
 try:
@@ -37,6 +37,7 @@ async def send_daily(peer, args):
     return peer, "Неверный или отсутствует номер группы."
 
 
+# Возвращает недельное расписание по группе в диалог
 @BotApp.command(command="неделя", replaceable=True, placeholder="Подождите, идёт обработка...")
 async def send_weekly(peer, args):
     if args is None:
