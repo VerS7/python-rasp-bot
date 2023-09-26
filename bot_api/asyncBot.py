@@ -1,18 +1,26 @@
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
-from typing import Callable
 from aiohttp import ClientSession, FormData
-from utility import *
+from typing import Callable, Union, List
+from bot_api.commandParser import Command
+
 import asyncio
 
 
 class AsyncVkBot:
-    def __init__(self, access_token: str, pub_id: int):
+    def __init__(self, access_token: str, pub_id: int, prefixes="!#"):
+        """
+        :param str access_token: токен доступа группы ВК
+        :param int pub_id: id группы ВК
+        :param prefixes: список доступных префиксов для команд
+        """
         self.session = TokenSession(access_token=access_token)
         self.api = API(self.session)
         self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
 
-        self.__commands = {}
+        self.__prefixes = prefixes
+
+        self.__commands = {}  # словарь {команда: функция} для вызовов функций из цикла обработки сообщений
 
     async def __main(self):
         """
@@ -24,19 +32,13 @@ class AsyncVkBot:
                 peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
                 message = event["object"]["message"]["text"]  # текст сообщения
 
-                # ------- Тест -----------
-                if event["object"]["message"]["text"] == "!t":
-                    images = image_to_bytes([Image.open("../files/raspback.png"), Image.open("../files/test.jpg")])
-                    att = await self.image_attachments(peer, images)
-                    await self.send_message(peer, "тестовое изображение", attachment=att)
-                # ------- Тест -----------
-
-                if any(message.startswith(prefix) for prefix in ["%", "!", "^", "@"]):
-                    if message.split()[0] in self.__commands.keys():
-                        asyncio.create_task(self.__commands[message.split()[0]](peer, message))
+                command = Command(message, self.__prefixes)   # обработка сообщения
+                if command.isCommand():                       # проверка на наличие команды
+                    asyncio.create_task(self.__commands[command.command](peer, command.args))
 
     async def send_message(self, peer_id: str, message: str, attachment: Union[list, str, None] = None) -> int:
         """
+        Отправляет сообщение по peer_id диалога
         :param int peer_id: peer id диалога
         :param str message: сообщение
         :param attachment: list/str загруженных на сервер вложений
@@ -56,7 +58,7 @@ class AsyncVkBot:
     async def edit_message(self, peer_id: str, message: str, message_id: int,
                            attachment: Union[list, str, None] = None) -> None:
         """
-        Редактирует сообщение по message_id
+        Редактирует сообщение по message_id в диалоге по peer_id
         :param int message_id: айди сообщения для редактирования
         :param int peer_id: peer id диалога
         :param str message: сообщение
@@ -126,6 +128,7 @@ class AsyncVkBot:
         :param bool admin: админ-команда или нет
         :return: command-wrapper
         """
+
         def __command(__func):
             async def __wrapper(*args, **kwargs):
                 # Основная логика
@@ -158,29 +161,10 @@ class AsyncVkBot:
         """
         Запуск асинхронного бота
         """
-        loop = asyncio.get_event_loop()
-        task = loop.create_task(self.__main())
-        loop.run_until_complete(task)
-
-
-t = "b43c55878dc7efb2ba857f47d389298d3aae540f72eba893c70eedc1e30109f50e770f3f45b052f180a04"
-p = 209586297
-a = AsyncVkBot(t, p)
-
-from rasp_api.Schedule import daily_image, weekly_images
-
-
-@a.command(command="!тест", replaceable=True, placeholder="Подождите, идёт обработка...")
-async def send_daily(peer, message):
-    return peer, f"всё работает! Команда:{message}", image_to_bytes(daily_image("0121-АС"))
-
-
-@a.command(command="!неделя", replaceable=True, placeholder="Подождите, идёт обработка...")
-async def send_weekly(peer, message):
-    return peer, f"Тест. Команда:{message}", image_to_bytes(weekly_images("544"))
-
-
-@a.command(command="!иди_нахуй", replaceable=True, placeholder="Пошел ты нахуй, Никита")
-async def test_counter(peer, message):
-    return peer, f"Я делаю ебаного асинхронного бота, хули ты тут выёбываешься. Ты хотя бы знаешь, что такое асинхронность?"
-a.run()
+        while True:
+            try:
+                loop = asyncio.get_event_loop()
+                task = loop.create_task(self.__main())
+                loop.run_until_complete(task)
+            except Exception as e:
+                asyncio.sleep(10)
