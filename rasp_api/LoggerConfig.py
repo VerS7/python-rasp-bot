@@ -1,9 +1,10 @@
 import logging
 import sys
+import os
 
 
 consoleHandler = logging.StreamHandler(stream=sys.stdout)
-filelogHandler = logging.FileHandler(filename="../files/debug.log")
+filelogHandler = logging.FileHandler(filename=f"{os.path.dirname(os.path.abspath(__file__))}/debug.log")
 
 
 logging.basicConfig(
