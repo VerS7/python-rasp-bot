@@ -2,7 +2,7 @@ from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
 
-from typing import Callable, Union, List, Tuple
+from typing import Callable, Union, List
 
 from time import sleep
 
@@ -10,7 +10,6 @@ from bot_api.commandParser import Command
 from rasp_api.LoggerConfig import *
 
 import asyncio
-
 
 EXC_DELAY = 10
 
@@ -24,23 +23,22 @@ class AsyncVkBot:
         """
         self.__access, self.__pubid = access_token, pub_id
 
-        self.session, self.api, self.longpoll = self.__connect(self.__access, self.__pubid)
+        self.session: TokenSession = None
+        self.api: API = None
+        self.longpoll: BotsLongPoll = None
 
         self.__prefixes = prefixes
 
         self.__commands = {}  # словарь {команда: функция} для вызовов функций из цикла обработки сообщений
 
-    def __connect(self, access_token: str, pub_id: int) -> Tuple[TokenSession, API, BotsLongPoll]:
+    def __connect(self, access_token: str, pub_id: int):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         """
-
-        session = TokenSession(access_token=access_token)
-        api = API(session)
-        longpoll = BotsLongPoll(api, group_id=pub_id)
-
-        return session, api, longpoll
+        self.session = TokenSession(access_token=access_token)
+        self.api = API(self.session)
+        self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
 
     async def __main(self):
         """
@@ -52,7 +50,7 @@ class AsyncVkBot:
                 peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
                 message = event["object"]["message"]["text"]  # текст сообщения
 
-                command = Command(message, self.__prefixes)                            # обработка сообщения
+                command = Command(message, self.__prefixes)  # обработка сообщения
                 if command.isCommand() and command.command in self.__commands.keys():  # проверка на наличие команды
                     asyncio.create_task(self.__commands[command.command](peer, command.args))
                     logging.info(f"Выполнена команда [{command.command} ({command.args})] PeerID: {peer}")
@@ -154,7 +152,7 @@ class AsyncVkBot:
             async def __wrapper(*args, **kwargs):
                 # Основная логика
                 if admin:  # Если сообщение от админа
-                    raise "Не реализовано. На будущее"
+                    raise NotImplementedError
 
                 attachment = None
 
@@ -182,13 +180,18 @@ class AsyncVkBot:
         """
         Запуск асинхронного бота
         """
+        logging.info(msg="Бот запущен.")
+        self.__connect(self.__access, self.__pubid)
         while True:
             try:
                 loop = asyncio.get_event_loop()
                 task = loop.create_task(self.__main())
                 loop.run_until_complete(task)
+
+            except KeyboardInterrupt:
+                logging.info(msg=f"Отключение...")
+
             except:
-                logging.warning(msg=f"Ошибка в основном цикле. Delay: {EXC_DELAY}")
-                asyncio.run(self.session.close())
+                logging.warning(msg=f"Ошибка в основном цикле. Delay: {EXC_DELAY}s.")
+                self.__connect(self.__access, self.__pubid)
                 sleep(EXC_DELAY)
-                self.session, self.api, self.longpoll = self.__connect(self.__access, self.__pubid)
