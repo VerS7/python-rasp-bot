@@ -1,3 +1,5 @@
+import logging
+
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
@@ -191,7 +193,8 @@ class AsyncVkBot:
             except KeyboardInterrupt:
                 logging.info(msg=f"Отключение...")
 
-            except:
-                logging.warning(msg=f"Ошибка в основном цикле. Delay: {EXC_DELAY}s.")
+            except Exception as exc:
+                logging.error(exc)
+                logging.info(msg=f"Ожидание: {EXC_DELAY}s.")
                 self.__connect(self.__access, self.__pubid)
                 sleep(EXC_DELAY)
