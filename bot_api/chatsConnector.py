@@ -1,7 +1,9 @@
 from typing import Union
+from os import path
+
 import json
 
-CHATS_PATH = "../files/chats.json"
+CHATS_PATH = path.join(path.dirname(path.abspath(__file__)), "../files/chats.json")
 
 
 class Chats:
