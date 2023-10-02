@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import requests
+
 from bs4 import BeautifulSoup
 from typing import Tuple, List
 
@@ -121,8 +122,8 @@ def get_exact_update() -> tuple:
 
 
 def get_all_teachers(soup: BeautifulSoup) -> list:
-    raise "Не определено. На будущее"
+    raise NotImplementedError
 
 
 def get_daily_teacher(teacher: str, soup: BeautifulSoup) -> list:
-    raise "Не определено. На будущее"
+    raise NotImplementedError
