@@ -7,10 +7,11 @@ from bot_api.asyncBot import AsyncVkBot
 from bot_api.chatsConnector import Chats
 from bot_api.Utility import *
 
-from os import getenv
+from os import getenv, path
+
 try:
     from dotenv import load_dotenv
-    load_dotenv(dotenv_path="../files/.env")
+    load_dotenv(dotenv_path=path.join(path.dirname(path.abspath(__file__)), "../files/.env"))
 except ModuleNotFoundError:
     pass
 
@@ -53,7 +54,7 @@ async def send_weekly(peer, args):
 
 
 # Возвращает доступные группы в диалог
-@BotApp.command(command="группы", replaceable=True, placeholder="Подождите, идёт обработка...")
+@BotApp.command(command="группы")
 async def send_groups(peer, args):
     groups = '\n'.join(get_tags(URL_WEEKLY).keys())
     return peer, f"Доступные группы: \n{groups}."
@@ -86,9 +87,3 @@ async def notify_disconnect(peer, args):
 
     return peer, f"Данный чат не подключён к системе оповещений."
 
-
-# @BotApp.command(command="неделя", replaceable=True, placeholder="Подождите, идёт обработка...")
-# async def send_weekly(peer, args):
-#     return peer, f"Тест. Команда:{message}", image_to_bytes(weekly_images("544"))
-
-BotApp.run()
