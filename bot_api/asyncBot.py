@@ -1,5 +1,3 @@
-import logging
-
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
@@ -7,6 +5,8 @@ from aiohttp import ClientSession, FormData
 from typing import Callable, Union, List
 
 from time import sleep
+
+from functools import wraps
 
 from bot_api.commandParser import Command
 from rasp_api.LoggerConfig import *
@@ -55,7 +55,7 @@ class AsyncVkBot:
                 command = Command(message, self.__prefixes)  # обработка сообщения
                 if command.isCommand() and command.command in self.__commands.keys():  # проверка на наличие команды
                     asyncio.create_task(self.__commands[command.command](peer, command.args))
-                    logging.info(f"Выполнена команда [{command.command} ({command.args})] PeerID: {peer}")
+                    logging.info(f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
 
     async def send_message(self, peer_id: str, message: str, attachment: Union[list, str, None] = None) -> int:
         """
@@ -151,12 +151,14 @@ class AsyncVkBot:
         """
 
         def __command(__func):
+            @wraps(__func)
             async def __wrapper(*args, **kwargs):
-                # Основная логика
+                attachment = None
+
+                logging.info(msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
+
                 if admin:  # Если сообщение от админа
                     raise NotImplementedError
-
-                attachment = None
 
                 if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
                     message_id = await self.send_message(peer_id=args[0], message=placeholder)
@@ -167,6 +169,7 @@ class AsyncVkBot:
                         return await self.edit_message(peer_id=args[0], message=result[1],
                                                        message_id=message_id, attachment=attachment)
                 result = await __func(*args, **kwargs)
+
                 if len(result) == 3:
                     attachment = await self.image_attachments(result[0], result[2])
 
