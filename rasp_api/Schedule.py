@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .Parsing import *
+from os import path
 from typing import Union, List
 from PIL import Image, ImageDraw, ImageFont
 
@@ -7,7 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 IMAGE_SIZE = (1200, 1500)
 MAIN_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=35)
 OTHER_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=50)
-BG_IMAGE = "../files/raspback.png"
+BG_IMAGE = path.join(path.dirname(path.abspath(__file__)), "../files/raspback.png")
 
 
 def __prettify_for_image(schedule: list) -> list:
