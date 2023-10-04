@@ -15,7 +15,6 @@ class Formatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         level, module, func, line, thread = \
             record.levelname, record.module, record.funcName, record.lineno, record.threadName
-
         message = record.msg.__str__().replace('\n', ' ')
 
         time = datetime.now().strftime('%Y-%d-%m / %H:%M:%S')
@@ -34,7 +33,6 @@ class Formatter(logging.Formatter):
 
         if len(thread) <= self.max_thread_length:
             thread = f"{thread}" + " " * (self.max_thread_length - len(thread))
-
         return f"{time} [ {level} ] | {thread} | {module} | Func: {func} | Line: {line} | {message}"
 
 
