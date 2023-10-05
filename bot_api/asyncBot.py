@@ -148,7 +148,7 @@ class AsyncVkBot:
         :param str command: команда, которую слушает event listener
         :param bool replaceable: изменяется ли сообщение в процессе обработки
         :param str placeholder: сообщение, которое будет изменено
-        :param bool admin: админ-команда или нет
+        :param bool admin: админ-команда или нет. !Привязка идёт к чатам, а не к конкретным юзерам!
         :return: command-wrapper
         """
         def __command(__func: Callable):
