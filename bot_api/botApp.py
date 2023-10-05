@@ -19,7 +19,7 @@ except ModuleNotFoundError:
 token = getenv("VK_TOKEN")
 pub_id = int(getenv("PUBLIC_ID"))
 
-BotApp = AsyncVkBot(token, pub_id)  # Бот
+BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945])  # Бот
 ChatSystem = Chats()
 
 
@@ -87,3 +87,21 @@ async def notify_disconnect(peer, args):
 
     return peer, f"Данный чат не подключён к системе оповещений."
 
+
+# Админ-функционал
+@BotApp.command(command="admin", admin=True)
+async def admin_manage(peer, args):
+    if args is None:
+        return peer, "admin <command>\n" \
+                     "mypeer: peer_id чата\n" \
+                     "allchats: все привязанные чаты"
+
+    match args[0]:
+        case "mypeer":
+            return peer, f"Peer ID: {peer}"
+
+        case "allchats":
+            return peer, "\n".join([f"{chat[1]} : {chat[0]}" for chat in ChatSystem.get_chats().items()])
+
+        case _:
+            return peer, "Данная команда не определена."
