@@ -1,8 +1,10 @@
+import string
+
 from pyparsing import Word, Optional
 from typing import Union
 
-LETTERS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
-LETTERS_UPCASE = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+LETTERS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя" + string.ascii_lowercase
+LETTERS_UPCASE = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" + string.ascii_uppercase
 NUMBERS = "0123456789"
 
 
