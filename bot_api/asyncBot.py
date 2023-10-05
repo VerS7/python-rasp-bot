@@ -1,23 +1,25 @@
+import asyncio
+
+from typing import Callable, Union, List
+from time import sleep
+from functools import wraps
+
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
 
-from typing import Callable, Union, List
-
-from time import sleep
-
-from functools import wraps
-
 from bot_api.commandParser import Command
 from rasp_api.LoggerConfig import *
 
-import asyncio
 
 EXC_DELAY = 10
 
 
 class AsyncVkBot:
-    def __init__(self, access_token: str, pub_id: int, prefixes: str = "!#", admin_ids: list = None):
+    def __init__(self, access_token: str,
+                 pub_id: int,
+                 prefixes: str = "!#",
+                 admin_ids: list = None):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
@@ -33,7 +35,7 @@ class AsyncVkBot:
 
         self.__prefixes = prefixes
 
-        self.__commands = {}  # словарь {команда: функция} для вызовов функций из цикла обработки сообщений
+        self.__commands = {}  # словарь {команда: функция} для вызовов из цикла обработки сообщений
 
     def __connect(self, access_token: str, pub_id: int):
         """
@@ -55,11 +57,13 @@ class AsyncVkBot:
                 message = event["object"]["message"]["text"]  # текст сообщения
 
                 command = Command(message, self.__prefixes)  # обработка сообщения
-                if command.isCommand() and command.command in self.__commands.keys():  # проверка на наличие команды
+                if command.isCommand() and command.command in self.__commands:
                     asyncio.create_task(self.__commands[command.command](peer, command.args))
-                    logging.info(f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
+                    logging.info(
+                        f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
 
-    async def send_message(self, peer_id: str, message: str, attachment: Union[list, str, None] = None) -> int:
+    async def send_message(self, peer_id: str, message: str,
+                           attachment: Union[list, str, None] = None) -> int:
         """
         Отправляет сообщение по peer_id диалога
         :param int peer_id: peer id диалога
@@ -103,17 +107,18 @@ class AsyncVkBot:
         :param int peer_id: peer_id диалога
         :return: url сервера для загрузки изображений
         """
-        response = await self.session.send_api_request("photos.getMessagesUploadServer", {"peer_id": peer_id})
+        response = await self.session.send_api_request("photos.getMessagesUploadServer",
+                                                       {"peer_id": peer_id})
         return response["upload_url"]
 
     async def __upload_image(self, url: str, image: bytes) -> dict:
         """
         :param str url: url сервера для загрузки изображений
-        :param bytes images: изображение в виде bytes
+        :param bytes image: изображение в виде bytes
         :return: response с сервера
         """
         form_data = FormData()
-        form_data.add_field('photo', image, filename=f'rasp_image.png')
+        form_data.add_field('photo', image, filename='rasp_image.png')
 
         async with ClientSession() as session:
             async with session.post(url, data=form_data) as response:
@@ -151,14 +156,17 @@ class AsyncVkBot:
         :param bool admin: админ-команда или нет. !Привязка идёт к чатам, а не к конкретным юзерам!
         :return: command-wrapper
         """
+
         def __command(__func: Callable):
             @wraps(__func)
             async def __wrapper(*args, **kwargs):
                 attachment = None
 
-                logging.info(msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
+                logging.info(
+                    msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
 
-                if admin and not(args[0] in self.__admins):  # Если админ-команда не от админ-пользователя
+                if admin and not (
+                        args[0] in self.__admins):  # Если админ-команда не от админ-пользователя
                     return None
 
                 if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
@@ -174,11 +182,13 @@ class AsyncVkBot:
                 if len(result) == 3:
                     attachment = await self.image_attachments(result[0], result[2])
 
-                return await self.send_message(peer_id=result[0], message=result[1], attachment=attachment)
+                return await self.send_message(peer_id=result[0], message=result[1],
+                                               attachment=attachment)
 
             self.__commands[command] = __wrapper  # Отправка команды в пул доступных команд
 
             return __wrapper
+
         return __command
 
     def run(self):
@@ -194,7 +204,7 @@ class AsyncVkBot:
                 loop.run_until_complete(task)
 
             except KeyboardInterrupt:
-                logging.info(msg=f"Отключение...")
+                logging.info(msg="Отключение...")
 
             except Exception as exc:
                 logging.error(exc)
