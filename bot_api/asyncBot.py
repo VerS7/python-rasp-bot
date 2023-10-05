@@ -17,13 +17,15 @@ EXC_DELAY = 10
 
 
 class AsyncVkBot:
-    def __init__(self, access_token: str, pub_id: int, prefixes: str = "!#"):
+    def __init__(self, access_token: str, pub_id: int, prefixes: str = "!#", admin_ids: list = None):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         :param prefixes: список доступных префиксов для команд
         """
         self.__access, self.__pubid = access_token, pub_id
+
+        self.__admins = admin_ids
 
         self.session: TokenSession = None
         self.api: API = None
@@ -149,16 +151,15 @@ class AsyncVkBot:
         :param bool admin: админ-команда или нет
         :return: command-wrapper
         """
-
-        def __command(__func):
+        def __command(__func: Callable):
             @wraps(__func)
             async def __wrapper(*args, **kwargs):
                 attachment = None
 
                 logging.info(msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
 
-                if admin:  # Если сообщение от админа
-                    raise NotImplementedError
+                if admin and not(args[0] in self.__admins):  # Если админ-команда не от админ-пользователя
+                    return None
 
                 if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
                     message_id = await self.send_message(peer_id=args[0], message=placeholder)
@@ -178,7 +179,6 @@ class AsyncVkBot:
             self.__commands[command] = __wrapper  # Отправка команды в пул доступных команд
 
             return __wrapper
-
         return __command
 
     def run(self):
