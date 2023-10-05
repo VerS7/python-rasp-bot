@@ -11,6 +11,12 @@ class Chats:
         self.__path = path
         self.__chats: dict = self.__load_json()
 
+    def get_chats(self) -> dict:
+        """
+        Возвращает чаты с подключенными группами.
+        """
+        return self.__chats
+
     def add_group(self, chat_id: str, groupname: str):
         """
         Сохраняет значение чат: группа
