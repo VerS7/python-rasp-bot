@@ -9,7 +9,7 @@ from rasp_api.Schedule import daily_image
 from rasp_api.LoggerConfig import *
 
 from bot_api.Utility import image_to_bytes
-from bot_api.chatsConnector import Chats
+from bot_api.chats_connector import Chats
 
 
 class Notificator:
