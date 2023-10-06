@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Модуль логики работы асинхронного бота
+"""
 import asyncio
 
 from typing import Callable, Union, List
@@ -9,22 +12,25 @@ from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
 
-from bot_api.commandParser import Command
 from rasp_api.LoggerConfig import *
-
+from bot_api.command_parser import Command
 
 EXC_DELAY = 10
 
 
 class AsyncVkBot:
+    """
+    Класс работы ВК бота
+    """
     def __init__(self, access_token: str,
                  pub_id: int,
                  prefixes: str = "!#",
-                 admin_ids: list = None):
+                 admin_ids: list = None,
+                 notificator=None):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
-        :param prefixes: список доступных префиксов для команд
+        :param list prefixes: список доступных префиксов для команд
         """
         self.__access, self.__pubid = access_token, pub_id
 
@@ -33,6 +39,8 @@ class AsyncVkBot:
         self.session: TokenSession = None
         self.api: API = None
         self.longpoll: BotsLongPoll = None
+
+        self.__notificator = notificator
 
         self.__prefixes = prefixes
 
@@ -58,7 +66,7 @@ class AsyncVkBot:
                 message = event["object"]["message"]["text"]  # текст сообщения
 
                 command = Command(message, self.__prefixes)  # обработка сообщения
-                if command.isCommand() and command.command in self.__commands:
+                if command.is_command() and command.command in self.__commands:
                     asyncio.create_task(self.__commands[command.command](peer, command.args))
                     logging.info(
                         f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
@@ -178,6 +186,8 @@ class AsyncVkBot:
                             attachment = await self.image_attachments(result[0], result[2])
                         return await self.edit_message(peer_id=args[0], message=result[1],
                                                        message_id=message_id, attachment=attachment)
+                    logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
+                                     f"Невозможно заменить сообщение")
                 result = await __func(*args, **kwargs)
 
                 if len(result) == 3:
@@ -201,8 +211,11 @@ class AsyncVkBot:
         while True:
             try:
                 loop = asyncio.get_event_loop()
-                task = loop.create_task(self.__main())
-                loop.run_until_complete(task)
+                tasks = [loop.create_task(self.__main())]
+                if self.__notificator:
+                    tasks.append(loop.create_task(self.__notificator.run(self.send_message,
+                                                                         self.image_attachments)))
+                loop.run_until_complete(asyncio.gather(*tasks))
 
             except KeyboardInterrupt:
                 logging.info(msg="Отключение...")
