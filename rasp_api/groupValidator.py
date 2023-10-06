@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from .GatherTags import get_tags
 from .Parsing import URL_WEEKLY
 from typing import Union
+
 
 GROUPTAGS = get_tags(URL_WEEKLY)
 
