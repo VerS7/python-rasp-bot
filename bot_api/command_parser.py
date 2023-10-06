@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Модуль обработки комманд
+"""
 import string
 
-from pyparsing import Word, Optional
 from typing import Union
+
+from pyparsing import Word, Optional
 
 
 LETTERS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя" + string.ascii_lowercase
@@ -11,10 +15,12 @@ NUMBERS = "0123456789"
 
 
 class Command:
-    def __init__(self, string: str, prefixes: Union[str, None] = None):
+    """
+    Класс парсинга команды из строки
+    """
+    def __init__(self, string_: str, prefixes: Union[str, None] = None):
         """
-        Парсинг команды из строки
-        :param str string: строка для парсинга
+        :param str string_: строка для парсинга
         :param str prefixes: префиксы команды. По умолчанию !#
         """
         if prefixes:
@@ -22,7 +28,7 @@ class Command:
         else:
             self.__prefix = Word("!#")
 
-        self.__string = string
+        self.__string = string_
         self.__key = Word(LETTERS)
         self.__argument = Optional(Word(LETTERS + NUMBERS + "-" + LETTERS_UPPERCASE))
         self.__command = self.__prefix + self.__key + self.__argument
@@ -30,7 +36,7 @@ class Command:
         self.command = self.__get_command()
         self.args = self.__get_args()
 
-    def isCommand(self) -> bool:
+    def is_command(self) -> bool:
         """
         Является ли команда корректной или нет
         :return: True/False
@@ -41,11 +47,12 @@ class Command:
         except:
             return False
 
+        return False
+
     def __get_args(self) -> Union[list, None]:
-        if self.isCommand() and len(self.__command_list()) > 2:
+        if self.is_command() and len(self.__command_list()) > 2:
             return self.__command_list()[2::]
-        else:
-            return None
+        return None
 
     def __command_list(self) -> list:
         try:
@@ -54,7 +61,6 @@ class Command:
             return []
 
     def __get_command(self) -> Union[str, None]:
-        if self.isCommand():
+        if self.is_command():
             return self.__command_list()[1]
-        else:
-            return None
+        return None
