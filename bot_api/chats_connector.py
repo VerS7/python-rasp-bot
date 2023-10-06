@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
-from typing import Union
-from os import path
-
 import json
+from os import path
+from typing import Union
+
 
 CHATS_PATH = path.join(path.dirname(path.abspath(__file__)), "../files/chats.json")
 
 
 class Chats:
-    def __init__(self, path: str = CHATS_PATH):
-        self.__path = path
+    def __init__(self, file_path: str = CHATS_PATH):
+        self.__path = file_path
         self.__chats: dict = self.__load_json()
 
     def get_chats(self) -> dict:
