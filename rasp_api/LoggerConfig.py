@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
 import logging
 import sys
 
 from os import path
 from datetime import datetime
+
+LOG_PATH = f"{path.join(path.dirname(path.abspath(__file__)), '../files/debug.log')}"
 
 
 class Formatter(logging.Formatter):
@@ -41,10 +44,11 @@ formatter = Formatter()
 consoleHandler = logging.StreamHandler(stream=sys.stdout)
 consoleHandler.setFormatter(formatter)
 
-filelogHandler = logging.FileHandler(filename=f"{path.join(path.dirname(path.abspath(__file__)), '../files/debug.log')}")
+filelogHandler = logging.FileHandler(filename=LOG_PATH)
 filelogHandler.setFormatter(formatter)
 
-basic_format = "%(asctime)s | [%(levelname)s] | %(module)s Func: %(funcName)s() Line: %(lineno)d| %(message)s"
+basic_format = "%(asctime)s | [%(levelname)s] | %(module)s Func: %(funcName)s() " \
+               "Line: %(lineno)d| %(message)s"
 
 logging.basicConfig(
     level=logging.INFO,
