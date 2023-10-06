@@ -30,12 +30,16 @@ async def send_daily(peer, args):
     if args is None:
         if ChatSystem.in_chats(peer):
             groupname = ChatSystem.get_group(peer)
-            return peer, f"Ежедневное расписание для группы {groupname}.", image_to_bytes(daily_image(groupname))
+            return peer, \
+                f"Ежедневное расписание для группы {groupname}.", \
+                image_to_bytes(daily_image(groupname))
 
     if args is not None:
         groupname = validate_groupname(args[0])
         if groupname:
-            return peer, f"Ежедневное расписание для группы {groupname}.", image_to_bytes(daily_image(groupname))
+            return peer, \
+                f"Ежедневное расписание для группы {groupname}.", \
+                image_to_bytes(daily_image(groupname))
     return peer, "Неверный или отсутствует номер группы."
 
 
@@ -45,12 +49,16 @@ async def send_weekly(peer, args):
     if args is None:
         if ChatSystem.in_chats(peer):
             groupname = ChatSystem.get_group(peer)
-            return peer, f"Недельное расписание для группы {groupname}.", image_to_bytes(weekly_images(get_tag(groupname)))
+            return peer, \
+                f"Недельное расписание для группы {groupname}.", \
+                image_to_bytes(weekly_images(get_tag(groupname)))
 
     if args is not None:
         groupname = validate_groupname(args[0])
         if groupname:
-            return peer, f"Недельное расписание для группы {groupname}.", image_to_bytes(weekly_images(get_tag(groupname)))
+            return peer, \
+                f"Недельное расписание для группы {groupname}.", \
+                image_to_bytes(weekly_images(get_tag(groupname)))
     return peer, "Неверный или отсутствует номер группы."
 
 
@@ -102,7 +110,8 @@ async def admin_manage(peer, args):
             return peer, f"Peer ID: {peer}"
 
         case "allchats":
-            return peer, "\n".join([f"{chat[1]} : {chat[0]}" for chat in ChatSystem.get_chats().items()])
+            return peer, \
+                "\n".join([f"{chat[1]} : {chat[0]}" for chat in ChatSystem.get_chats().items()])
 
         case _:
             return peer, "Данная команда не определена."
