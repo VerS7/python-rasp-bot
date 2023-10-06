@@ -1,3 +1,6 @@
+"""
+Модуль системы оповещений.
+"""
 from typing import Callable
 from asyncio import sleep
 
@@ -9,6 +12,9 @@ from bot_api.chatsConnector import Chats
 
 
 class Notificator:
+    """
+    Класс работы системы оповещений.
+    """
     def __init__(self, chats: Chats, timings: list, cooldown_s: int = 60):
         """
         :param Chats chats: Система подключенных чатов
