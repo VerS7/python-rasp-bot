@@ -9,7 +9,7 @@ from rasp_api.GatherTags import get_tags
 from rasp_api.Parsing import URL_WEEKLY
 from rasp_api.groupValidator import get_tag, validate_groupname
 
-from bot_api.asyncBot import AsyncVkBot
+from bot_api.async_bot import AsyncVkBot
 from bot_api.chats_connector import Chats
 from bot_api.notificator import Notificator
 from bot_api.Utility import image_to_bytes
