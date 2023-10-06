@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Utility logic
+"""
+from typing import Union, List
+
 from PIL import Image
 from io import BytesIO
-from typing import Union, List
+
 
 
 def image_to_bytes(images: Union[List[Image.Image], Image.Image]) -> List[bytes]:
