@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Модуль работы системы подключенных чатов
+"""
 import json
 from os import path
 from typing import Union
@@ -8,6 +11,9 @@ CHATS_PATH = path.join(path.dirname(path.abspath(__file__)), "../files/chats.jso
 
 
 class Chats:
+    """
+    Класс системы чатов
+    """
     def __init__(self, file_path: str = CHATS_PATH):
         self.__path = file_path
         self.__chats: dict = self.__load_json()
@@ -48,6 +54,10 @@ class Chats:
         return self.__chats.get(chat_id, None)
 
     def in_chats(self, chat_id: str) -> bool:
+        """
+        :param str chat_id: id чата
+        :return: True/False наличие чата в ситсеме оповещений
+        """
         if not isinstance(chat_id, str):
             chat_id = str(chat_id)
 
