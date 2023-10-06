@@ -12,7 +12,7 @@ from rasp_api.groupValidator import get_tag, validate_groupname
 from bot_api.async_bot import AsyncVkBot
 from bot_api.chats_connector import Chats
 from bot_api.notificator import Notificator
-from bot_api.Utility import image_to_bytes
+from bot_api.utility import image_to_bytes
 
 try:
     from dotenv import load_dotenv
