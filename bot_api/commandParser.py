@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
 import string
 
 from pyparsing import Word, Optional
 from typing import Union
 
+
 LETTERS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя" + string.ascii_lowercase
-LETTERS_UPCASE = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" + string.ascii_uppercase
+LETTERS_UPPERCASE = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" + string.ascii_uppercase
 NUMBERS = "0123456789"
 
 
@@ -22,7 +24,7 @@ class Command:
 
         self.__string = string
         self.__key = Word(LETTERS)
-        self.__argument = Optional(Word(LETTERS + NUMBERS + "-" + LETTERS_UPCASE))
+        self.__argument = Optional(Word(LETTERS + NUMBERS + "-" + LETTERS_UPPERCASE))
         self.__command = self.__prefix + self.__key + self.__argument
 
         self.command = self.__get_command()
