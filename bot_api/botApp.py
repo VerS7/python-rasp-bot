@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from rasp_api.Schedule import daily_image, weekly_images
 from rasp_api.GatherTags import get_tags
 from rasp_api.Parsing import URL_WEEKLY
