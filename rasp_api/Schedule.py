@@ -45,7 +45,8 @@ def daily_image(groupname: str, resize_multiplier: Union[None, float] = None) ->
     """
     Расписание на день в PIL Image object
     :param str groupname: название/номер группы
-    :param resize_multiplier: Множитель размера изображения. 1 = default, 0.5 - изображение в 2 раза меньше
+    :param resize_multiplier: Множитель размера изображения.
+    1 = default, 0.5 - изображение в 2 раза меньше
     """
     background = Image.open(BG_IMAGE)
     rasp_image = ImageDraw.Draw(background)
@@ -60,17 +61,22 @@ def daily_image(groupname: str, resize_multiplier: Union[None, float] = None) ->
     rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
 
     if resize_multiplier:
-        return background.resize((int(IMAGE_SIZE[0] * resize_multiplier), int(IMAGE_SIZE[1] * resize_multiplier)))
+        return background.resize((int(IMAGE_SIZE[0] * resize_multiplier),
+                                  int(IMAGE_SIZE[1] * resize_multiplier)))
     else:
         return background.resize(IMAGE_SIZE)
 
 
-def __create_images(grouptag: str, rasp_type: str, resize_multiplier: Union[None, float] = None) -> List[Image.Image]:
+def __create_images(grouptag: str,
+                    rasp_type: str,
+                    resize_multiplier:
+                    Union[None, float] = None) -> List[Image.Image]:
     """
     Создаёт список недельного/основого расписания в PIL Image objects
     :param str grouptag: тэг группы
     :param str rasp_type: тип расписания. week - недельное, main - основное
-    :param resize_multiplier: Множитель размера изображения. 1 = default, 0.5 - изображение в 2 раза меньше
+    :param resize_multiplier: Множитель размера изображения. 
+    1 = default, 0.5 - изображение в 2 раза меньше
     :return: Список с PIL объектами изображений недельного расписания
     """
     rasp = []
@@ -113,7 +119,8 @@ def weekly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -
     """
     Создаёт список недельного расписания в PIL Image objects
     :param str grouptag: тэг группы
-    :param resize_multiplier: Множитель размера изображения. 1 = default, 0.5 - изображение в 2 раза меньше
+    :param resize_multiplier: Множитель размера изображения.
+    1 = default, 0.5 - изображение в 2 раза меньше
     :return: Список с PIL объектами изображений недельного расписания
     """
     return __create_images(grouptag, "week", resize_multiplier)[0:7]
@@ -123,7 +130,8 @@ def mainly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -
     """
     Создаёт список основого расписания в PIL Image objects
     :param str grouptag: тэг группы
-    :param resize_multiplier: Множитель размера изображения. 1 = default, 0.5 - изображение в 2 раза меньше
+    :param resize_multiplier: Множитель размера изображения.
+    1 = default, 0.5 - изображение в 2 раза меньше
     :return: Список с PIL объектами изображений недельного расписания
     """
     return __create_images(grouptag, "week", resize_multiplier)
