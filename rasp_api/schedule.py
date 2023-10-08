@@ -44,19 +44,26 @@ def __prettify_length(string: str) -> str:
     return string
 
 
-def daily_image(groupname: str, resize_multiplier: Union[None, float] = None) -> Image.Image:
+def daily_image(groupname: str,
+                soup: BeautifulSoup = None,
+                resize_multiplier: Union[None, float] = None) -> Image.Image:
     """
     Расписание на день в PIL Image object
     :param str groupname: название/номер группы
     :param resize_multiplier: Множитель размера изображения.
     1 = default, 0.5 - изображение в 2 раза меньше
     """
+    if soup:
+        parsed = soup
+    else:
+        parsed = parse_request(URL_DAILY)
+
     background = Image.open(BG_IMAGE)
     rasp_image = ImageDraw.Draw(background)
 
-    update = get_update()
-    time = get_day()
-    daily = __prettify_for_image(get_daily(groupname))
+    update = get_update(parsed)
+    time = get_day(parsed)
+    daily = __prettify_for_image(get_daily(groupname, parsed))
 
     rasp_image.text((460, 100), time, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
     rasp_image.text((510, 160), groupname, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
