@@ -101,12 +101,17 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
     return group, get_update(), week
 
 
-def get_daily(groupname: str) -> list:
+def get_daily(groupname: str, soup: BeautifulSoup = None) -> list:
     """
     Возвращает list расписания на день по имени группы или None
     :param str groupname: номер/название группы
     """
-    return get_all_daily(parse_request(URL_DAILY)).get(groupname)
+    if soup:
+        parsed = soup
+    else:
+        parsed = parse_request(URL_DAILY)
+
+    return get_all_daily(parsed).get(groupname)
 
 
 def get_update() -> str:
