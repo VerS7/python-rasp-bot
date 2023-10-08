@@ -4,9 +4,9 @@
 """
 from os import getenv, path
 
-from rasp_api.Schedule import daily_image, weekly_images
+from rasp_api.schedule import daily_image, weekly_images
 from rasp_api.gather_tags import get_tags
-from rasp_api.Parsing import URL_WEEKLY
+from rasp_api.parsing import URL_WEEKLY
 from rasp_api.group_validate import get_tag, validate_groupname
 
 from bot_api.async_bot import AsyncVkBot
