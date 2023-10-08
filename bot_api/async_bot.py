@@ -18,33 +18,20 @@ from bot_api.command_parser import Command
 EXC_DELAY = 10
 
 
-class AsyncVkBot:
+class ApiAccess:
     """
-    Класс работы ВК бота
+    Взаимодействие с API
     """
-    def __init__(self, access_token: str,
-                 pub_id: int,
-                 prefixes: str = "!#",
-                 admin_ids: list = None,
-                 notificator=None):
+    def __init__(self, access_token: str, pub_id: int):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
-        :param list prefixes: список доступных префиксов для команд
         """
         self.__access, self.__pubid = access_token, pub_id
-
-        self.__admins = admin_ids
 
         self.session: TokenSession = None
         self.api: API = None
         self.longpoll: BotsLongPoll = None
-
-        self.__notificator = notificator
-
-        self.__prefixes = prefixes
-
-        self.__commands = {}  # словарь {команда: функция} для вызовов из цикла обработки сообщений
 
     def __connect(self, access_token: str, pub_id: int):
         """
@@ -54,22 +41,6 @@ class AsyncVkBot:
         self.session = TokenSession(access_token=access_token)
         self.api = API(self.session)
         self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
-
-    async def __main(self):
-        """
-        main бесконечный longpoll цикл обработки сообщений
-        """
-        async for event in self.longpoll.iter():
-            if event["type"] == "message_new":
-
-                peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
-                message = event["object"]["message"]["text"]  # текст сообщения
-
-                command = Command(message, self.__prefixes)  # обработка сообщения
-                if command.is_command() and command.command in self.__commands:
-                    asyncio.create_task(self.__commands[command.command](peer, command.args))
-                    logging.info(
-                        f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
 
     async def send_message(self, peer_id: str, message: str,
                            attachment: Union[list, str, None] = None) -> int:
@@ -152,6 +123,43 @@ class AsyncVkBot:
             attachments.append(f"photo{img_response[0]['owner_id']}_{img_response[0]['id']}")
 
         return attachments
+
+
+class AsyncVkBot(ApiAccess):
+    """
+    Класс работы ВК бота
+    """
+    def __init__(self, access_token: str, pub_id: int,
+                 prefixes: str = "!#", admin_ids: list = None, notificator=None):
+        """
+        :param str access_token: токен доступа группы ВК
+        :param int pub_id: id группы ВК
+        :param list prefixes: список доступных префиксов для команд
+        :param list admin_ids: PeerID админ-чатов
+        :param notificator: Система оповещений
+        """
+        super().__init__(access_token, pub_id)
+
+        self.__admins = admin_ids
+        self.__notificator = notificator
+        self.__prefixes = prefixes
+        self.__commands = {}  # словарь {команда: функция} для вызовов из цикла обработки сообщений
+
+    async def __main(self):
+        """
+        main бесконечный longpoll цикл обработки сообщений
+        """
+        async for event in self.longpoll.iter():
+            if event["type"] == "message_new":
+
+                peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
+                message = event["object"]["message"]["text"]  # текст сообщения
+
+                command = Command(message, self.__prefixes)  # обработка сообщения
+                if command.is_command() and command.command in self.__commands:
+                    asyncio.create_task(self.__commands[command.command](peer, command.args))
+                    logging.info(
+                        f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
 
     def command(self, command: Union[str, None] = None,
                 replaceable: bool = False,
