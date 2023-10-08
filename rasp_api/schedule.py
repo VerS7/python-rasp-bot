@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-from .Parsing import *
+"""
+Создание изображений с расписанием.
+"""
 from os import path
-from typing import Union, List
+from typing import Union
+
+from .parsing import *
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -36,8 +40,7 @@ def __prettify_length(string: str) -> str:
     if len(string) > 55:
         if len(" ".join(string.split()[0:5])) > 55:
             return " ".join(string.split()[0:4]) + "..."
-        else:
-            return " ".join(string.split()[0:5]) + "..."
+        return " ".join(string.split()[0:5]) + "..."
     return string
 
 
@@ -63,8 +66,7 @@ def daily_image(groupname: str, resize_multiplier: Union[None, float] = None) ->
     if resize_multiplier:
         return background.resize((int(IMAGE_SIZE[0] * resize_multiplier),
                                   int(IMAGE_SIZE[1] * resize_multiplier)))
-    else:
-        return background.resize(IMAGE_SIZE)
+    return background.resize(IMAGE_SIZE)
 
 
 def __create_images(grouptag: str,
