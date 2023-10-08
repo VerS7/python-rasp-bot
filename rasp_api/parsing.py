@@ -153,6 +153,16 @@ def get_exact_update(soup: BeautifulSoup = None) -> tuple:
     raise Exception("Не удалось получить дату и время.")
 
 
+def is_empty(day_schedule: list) -> bool:
+    """
+    True/false пустое расписание или нет. (Пустое == нет пар!)
+    :param list day_schedule: Расписание на день.
+    """
+    if not(isinstance(day_schedule[0], list)):
+        raise Exception("Некорректное расписание.")
+    return len(day_schedule) > 6
+
+
 def get_all_teachers(soup: BeautifulSoup) -> list:
     raise NotImplementedError
 
