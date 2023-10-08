@@ -27,13 +27,13 @@ class ApiAccess:
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         """
-        self.__access, self.__pubid = access_token, pub_id
+        self.access, self.pubid = access_token, pub_id
 
         self.session: TokenSession = None
         self.api: API = None
         self.longpoll: BotsLongPoll = None
 
-    def __connect(self, access_token: str, pub_id: int):
+    def connect(self, access_token: str, pub_id: int):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
@@ -215,7 +215,7 @@ class AsyncVkBot(ApiAccess):
         Запуск асинхронного бота
         """
         logging.info(msg="Бот запущен.")
-        self.__connect(self.__access, self.__pubid)
+        self.connect(self.access, self.pubid)
         while True:
             try:
                 loop = asyncio.get_event_loop()
@@ -231,5 +231,5 @@ class AsyncVkBot(ApiAccess):
             except Exception as exc:
                 logging.error(exc)
                 logging.info(msg=f"Ожидание: {EXC_DELAY}s.")
-                self.__connect(self.__access, self.__pubid)
+                self.connect(self.access, self.pubid)
                 sleep(EXC_DELAY)
