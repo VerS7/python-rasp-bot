@@ -6,7 +6,7 @@ from typing import Callable
 from asyncio import sleep
 
 from rasp_api.Schedule import daily_image
-from rasp_api.LoggerConfig import *
+from rasp_api.log_conf import *
 
 from bot_api.utility import image_to_bytes
 from bot_api.chats_connector import Chats
