@@ -5,9 +5,9 @@
 from os import getenv, path
 
 from rasp_api.Schedule import daily_image, weekly_images
-from rasp_api.GatherTags import get_tags
+from rasp_api.gather_tags import get_tags
 from rasp_api.Parsing import URL_WEEKLY
-from rasp_api.groupValidator import get_tag, validate_groupname
+from rasp_api.group_validate import get_tag, validate_groupname
 
 from bot_api.async_bot import AsyncVkBot
 from bot_api.chats_connector import Chats

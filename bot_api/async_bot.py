@@ -12,7 +12,7 @@ from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
 
-from rasp_api.LoggerConfig import *
+from rasp_api.log_conf import *
 from bot_api.command_parser import Command
 
 EXC_DELAY = 10
