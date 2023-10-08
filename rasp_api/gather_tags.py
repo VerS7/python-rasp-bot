@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from .Parsing import parse_request
+"""
+Работа с тэгами и номерами групп.
+"""
 from typing import Union
+from .Parsing import parse_request
 
 
 def get_tags(url: str) -> dict:
