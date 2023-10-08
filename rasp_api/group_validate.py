@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
-from .GatherTags import get_tags
-from .Parsing import URL_WEEKLY
+"""
+Валидация номера группы.
+"""
 from typing import Union
+from .gather_tags import get_tags
+from .Parsing import URL_WEEKLY
 
 
 GROUPTAGS = get_tags(URL_WEEKLY)
