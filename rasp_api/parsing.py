@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Парсинг данных с сайта расписания.
+"""
 import re
-import requests
-
-from bs4 import BeautifulSoup
 from typing import Tuple, List
+
+import requests
+from bs4 import BeautifulSoup
+
 
 URL_DAILY = "http://dmitrov-dubna.ru/shedule/hg.htm"
 URL_WEEKLY = "http://dmitrov-dubna.ru/shedule/cg.htm"
@@ -43,7 +47,10 @@ def get_all_daily(soup: BeautifulSoup) -> dict:
                     groups[group_name] = current
                 current = [row]
             elif len(row.get_text()) > 1:
-                current.append(row.get_text(strip=True, separator="|").encode('latin1').decode('cp1251').split("|"))
+                current.append(row.get_text(strip=True, separator="|")
+                                  .encode('latin1')
+                                  .decode('cp1251')
+                                  .split("|"))
     return groups
 
 
@@ -73,7 +80,7 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
         for row in list(elem)[5:]:
             if "\n" in row:
                 if "День" not in temp[0]:  # Проверка на День Пара Неделя 2. Костыль :/
-                    if len(temp[0][0]) > 9:  # Проверка на полную дату в недельном расписании. Костыль :/
+                    if len(temp[0][0]) > 9:  # Проверка на полную дату. Костыль :/
                         day = f"{temp[0][0]}  {temp[0][1]}"
                         del temp[0][0]  # Удаление полной даты
                         del temp[0][0]  # Удаление дня недели
@@ -83,9 +90,14 @@ def __get_week_or_main(soup: BeautifulSoup) -> Tuple[str, str, List[dict]]:
                     week.append({day: temp.copy()})
                 temp.clear()
             else:
-                text = row.get_text(strip=True, separator="|").encode('latin1').decode('cp1251').split("|")
+                text = row.get_text(strip=True, separator="|")\
+                          .encode('latin1')\
+                          .decode('cp1251')\
+                          .split("|")
+
                 if not len(text) == 1:
                     temp.append(text)
+
     return group, get_update(), week
 
 
@@ -126,4 +138,7 @@ def get_all_teachers(soup: BeautifulSoup) -> list:
 
 
 def get_daily_teacher(teacher: str, soup: BeautifulSoup) -> list:
+    """
+    :param str teacher: Фамилия/Имя препода.
+    """
     raise NotImplementedError
