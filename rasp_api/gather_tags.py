@@ -3,7 +3,7 @@
 Работа с тэгами и номерами групп.
 """
 from typing import Union
-from .Parsing import parse_request
+from .parsing import parse_request
 
 
 def get_tags(url: str) -> dict:
