@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Конфигурация логгера.
+"""
 import logging
 import sys
 
@@ -9,6 +12,9 @@ LOG_PATH = f"{path.join(path.dirname(path.abspath(__file__)), '../files/debug.lo
 
 
 class Formatter(logging.Formatter):
+    """
+    Форматтер логгирования.
+    """
     max_level_length = 9
     max_module_length = 14
     max_func_length = 15
@@ -18,7 +24,7 @@ class Formatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         level, module, func, line, thread = \
             record.levelname, record.module, record.funcName, record.lineno, record.threadName
-        message = record.msg.__str__().replace('\n', ' ')
+        message = str(record.msg).replace('\n', ' ')
 
         time = datetime.now().strftime('%Y-%d-%m / %H:%M:%S')
 
@@ -47,7 +53,7 @@ consoleHandler.setFormatter(formatter)
 filelogHandler = logging.FileHandler(filename=LOG_PATH)
 filelogHandler.setFormatter(formatter)
 
-basic_format = "%(asctime)s | [%(levelname)s] | %(module)s Func: %(funcName)s() " \
+BASIC_FORMAT = "%(asctime)s | [%(levelname)s] | %(module)s Func: %(funcName)s() " \
                "Line: %(lineno)d| %(message)s"
 
 logging.basicConfig(
