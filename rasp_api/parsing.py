@@ -114,25 +114,40 @@ def get_daily(groupname: str, soup: BeautifulSoup = None) -> list:
     return get_all_daily(parsed).get(groupname)
 
 
-def get_update() -> str:
+def get_update(soup: BeautifulSoup = None) -> str:
     """Возвращает строку состояния последнего обновления расписания"""
-    soup = parse_request(URL_DAILY).select('.ref')
-    update = soup[0].get_text().encode('latin1').decode('cp1251').strip("\r\n")
+    if soup:
+        parsed = soup
+    else:
+        parsed = parse_request(URL_DAILY)
+
+    data = parsed.select('.ref')
+    update = data[0].get_text().encode('latin1').decode('cp1251').strip("\r\n")
     return update
 
 
-def get_day() -> str:
+def get_day(soup: BeautifulSoup = None) -> str:
     """Возвращает строку текущего дня"""
-    soup = parse_request(URL_DAILY).select('.zgr')
+    if soup:
+        parsed = soup
+    else:
+        parsed = parse_request(URL_DAILY)
+
+    soup = parsed.select('.zgr')
     day = soup[0].get_text().encode('latin1').decode('cp1251').strip("\r\n")
     if len(day) > 10:
         return day
     raise Exception("Не удалось получить текущий день.")
 
 
-def get_exact_update() -> tuple:
+def get_exact_update(soup: BeautifulSoup = None) -> tuple:
     """Возвращает конкретное значение даты и времени обновления"""
-    match = re.search(r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", get_update())
+    if soup:
+        parsed = soup
+    else:
+        parsed = parse_request(URL_DAILY)
+
+    match = re.search(r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", get_update(parsed))
     if match:
         return match.group(1), match.group(2)
     raise Exception("Не удалось получить дату и время.")
