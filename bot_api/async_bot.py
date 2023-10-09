@@ -42,16 +42,25 @@ class ApiAccess:
         self.api = API(self.session)
         self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
 
-    async def send_message(self, peer_id: str, message: str,
-                           attachment: Union[list, str, None] = None) -> int:
+    async def send_message(self,
+                           peer_id: str,
+                           message: str,
+                           attachment: Union[list, str, None] = None,
+                           vk_keyboard: str = None) -> int:
         """
         Отправляет сообщение по peer_id диалога
+        :param str vk_keyboard: JSON в виде строки с VK клавиатурой.
         :param int peer_id: peer id диалога
         :param str message: сообщение
         :param attachment: list/str загруженных на сервер вложений
         :return: message_id сообщения
         """
         param = {"peer_id": peer_id, "message": message}
+
+        _attachment = None
+
+        if vk_keyboard:
+            param["keyboard"] = vk_keyboard
 
         if attachment:
             if isinstance(attachment, list):
@@ -62,16 +71,26 @@ class ApiAccess:
 
         return await self.session.send_api_request("messages.send", param)
 
-    async def edit_message(self, peer_id: str, message: str, message_id: int,
-                           attachment: Union[list, str, None] = None) -> None:
+    async def edit_message(self,
+                           peer_id: str,
+                           message: str,
+                           message_id: int,
+                           attachment: Union[list, str, None] = None,
+                           vk_keyboard: str = None) -> None:
         """
         Редактирует сообщение по message_id в диалоге по peer_id
+        :param str vk_keyboard: JSON в виде строки с VK клавиатурой.
         :param int message_id: айди сообщения для редактирования
         :param int peer_id: peer id диалога
         :param str message: сообщение
         :param attachment: list/str загруженных на сервер вложений
         """
         param = {"peer_id": peer_id, "message": message, "message_id": message_id}
+
+        _attachment = None
+
+        if vk_keyboard:
+            param["keyboard"] = vk_keyboard
 
         if attachment:
             if isinstance(attachment, list):
@@ -182,20 +201,25 @@ class AsyncVkBot(ApiAccess):
                 logging.info(
                     msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
 
-                if admin and not (
-                        args[0] in self.__admins):  # Если админ-команда не от админ-пользователя
+                if admin and not (args[0] in self.__admins):  # Если админ-команда не от админа
                     return None
 
                 if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
-                    message_id = await self.send_message(peer_id=args[0], message=placeholder)
+                    message_id = await self.send_message(peer_id=args[0],
+                                                         message=placeholder,
+                                                         vk_keyboard=keyboard)
+
                     result = await __func(*args, **kwargs)
+
                     if message_id != 0:
                         if len(result) == 3:
                             attachment = await self.image_attachments(result[0], result[2])
                         return await self.edit_message(peer_id=args[0], message=result[1],
                                                        message_id=message_id, attachment=attachment)
+
                     logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
                                      f"Невозможно заменить сообщение")
+
                 result = await __func(*args, **kwargs)
 
                 if len(result) == 3:
