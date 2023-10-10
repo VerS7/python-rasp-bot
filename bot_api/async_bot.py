@@ -230,7 +230,7 @@ class AsyncVkBot(ApiAccess):
                 logging.info(
                     msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {peer}")
 
-                if admin and not (args[0] in self.__admins):  # Если админ-команда не от админа
+                if admin and not args[0] in self.__admins:  # Если админ-команда не от админа
                     return None
 
                 if placeholder:  # Если есть placeholder
@@ -245,9 +245,10 @@ class AsyncVkBot(ApiAccess):
                         attach = await self.image_attachments(peer, result[2])
                     return await self.edit_message(peer_id=peer, message=result[1],
                                                    message_id=message_id, attachment=attach)
-                else:
+
+                if placeholder and message_id == 0:
                     logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
-                                     f"Невозможно заменить сообщение")
+                                 f"Невозможно заменить сообщение")
 
                 if len(result) == 3:
                     attach = await self.image_attachments(peer, result[2])
