@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
-from rasp_api.Parsing import get_daily, get_update, get_day, URL_WEEKLY
-from rasp_api.GatherTags import validate_groupname, get_tags
+"""
+Функционал для серверных запросов.
+"""
 from typing import Union
+
+from rasp_api.parsing import get_daily, get_update, get_day, URL_WEEKLY
+from rasp_api.gather_tags import validate_groupname, get_tags
 
 
 def html_daily(groupname: str) -> Union[str, None]:
@@ -17,11 +21,18 @@ def html_daily(groupname: str) -> Union[str, None]:
 
     rasp = get_daily(validated)
 
-    html = [f'<span style="font-size: 20px; font-weight: bold;">Расписание на {get_day()}</span><br>',
-            f'<span style="font-size: 20px; font-weight: bold;">Группа: {validated}</span><br><br>']
+    html = [f'<span style="font-size: 20px; font-weight: bold;">Расписание на '
+            f'{get_day()}'
+            f'</span><br>',
+
+            f'<span style="font-size: 20px; font-weight: bold;">Группа: '
+            f'{validated}'
+            f'</span><br><br>']
 
     for elem in rasp:
-        html.append(f'<span style="font-weight: bold; font-size: 16px;">{elem[0]} {elem[1]}</span><br>')
+        html.append(f'<span style="font-weight: bold; font-size: 16px;">'
+                    f'{elem[0]} {elem[1]}'
+                    f'</span><br>')
         if len(elem) > 2:
             html.append(f'<span style="font-size: 18px; font-weight: bold;">{elem[2]}</span><br>'
                         f'<span style="font-size: 15px; font-weight: bold;">{elem[3]}</span><br>'
