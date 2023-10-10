@@ -14,7 +14,9 @@ from aiovk.longpoll import BotsLongPoll
 from aiohttp import ClientSession, FormData
 
 from rasp_api.log_conf import *
+
 from bot_api.command_parser import Command
+from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
 
 EXC_DELAY = 10
 
@@ -182,7 +184,11 @@ class AsyncVkBot(ApiAccess):
                     await self.run_command(command.command, peer, command.args)
 
                 if payload:
-                    await self.run_command(json.loads(payload)["command"], peer)
+                    if json.loads(payload)["command"] == "start":
+                        await self.send_message(peer, message="Привет!",
+                                                vk_keyboard=get_keyboard_string(BASIC_KEYBOARD))
+                    else:
+                        await self.run_command(json.loads(payload)["command"], peer)
 
     async def run_command(self, command: str, peer_id: int, args: list = None) -> None:
         """
