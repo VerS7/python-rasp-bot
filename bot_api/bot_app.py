@@ -9,10 +9,11 @@ from rasp_api.gather_tags import get_tags
 from rasp_api.parsing import URL_WEEKLY
 from rasp_api.group_validate import get_tag, validate_groupname
 
-from bot_api.async_bot import AsyncVkBot
+from bot_api.async_bot import AsyncVkBot, GREETING_TEXT
 from bot_api.chats_connector import Chats
 from bot_api.notificator import Notificator
 from bot_api.utility import image_to_bytes
+from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
 
 try:
     from dotenv import load_dotenv
@@ -23,14 +24,29 @@ except ModuleNotFoundError:
 
 token = getenv("VK_TOKEN")
 pub_id = int(getenv("PUBLIC_ID"))
+prefixes = "!$#%^&*"
 
 ChatSystem = Chats()  # Подключенные к оповещению чаты
-Notifier = Notificator(ChatSystem, timings=["01:45"])  # Система оповещений
+Notifier = Notificator(ChatSystem, timings=["05:10"])  # Система оповещений
 BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945], notificator=Notifier)  # Бот
+
+basic_keyboard = get_keyboard_string(BASIC_KEYBOARD)  # Стандартная Not-Inline клавиатура
+
+
+# Возвращает стандартную информацию о боте в диалог
+@BotApp.command(command="инфо", keyboard=basic_keyboard)
+async def send_info(peer, args):
+    """
+    Вовращает стандартную информацию из info.txt
+    :param peer: id чата
+    :param args: аргументы, переданные при вызове команды через чат
+    """
+    return peer, GREETING_TEXT
 
 
 # Возвращает расписание на день по группе в диалог
-@BotApp.command(command="расп", replaceable=True, placeholder="Подождите, идёт обработка...")
+@BotApp.command(command="расп", placeholder="Подождите, идёт обработка...",
+                keyboard=basic_keyboard)
 async def send_daily(peer, args):
     """
     Вовращает ежедневное расписание по номеру группы или подключенному к чату номеру.
@@ -43,6 +59,8 @@ async def send_daily(peer, args):
             return peer, \
                 f"Ежедневное расписание для группы {groupname}.", \
                 image_to_bytes(daily_image(groupname))
+        else:
+            return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
         groupname = validate_groupname(args[0])
@@ -54,7 +72,8 @@ async def send_daily(peer, args):
 
 
 # Возвращает недельное расписание по группе в диалог
-@BotApp.command(command="неделя", replaceable=True, placeholder="Подождите, идёт обработка...")
+@BotApp.command(command="нрасп", placeholder="Подождите, идёт обработка...",
+                keyboard=basic_keyboard)
 async def send_weekly(peer, args):
     """
     Вовращает ежеднедельное расписание по номеру группы или подключенному к чату номеру.
@@ -67,6 +86,8 @@ async def send_weekly(peer, args):
             return peer, \
                 f"Недельное расписание для группы {groupname}.", \
                 image_to_bytes(weekly_images(get_tag(groupname)))
+        else:
+            return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
         groupname = validate_groupname(args[0])
@@ -78,7 +99,7 @@ async def send_weekly(peer, args):
 
 
 # Возвращает доступные группы в диалог
-@BotApp.command(command="группы")
+@BotApp.command(command="группы", keyboard=basic_keyboard)
 async def send_groups(peer, args):
     """
     Возвращает в чат все доступные к вызову номера групп
