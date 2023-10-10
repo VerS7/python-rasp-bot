@@ -151,7 +151,6 @@ class AsyncVkBot(ApiAccess):
     """
     Класс работы ВК бота
     """
-
     def __init__(self, access_token: str, pub_id: int,
                  prefixes: str = "!#", admin_ids: list = None, notificator=None):
         """
