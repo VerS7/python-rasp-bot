@@ -27,7 +27,7 @@ pub_id = int(getenv("PUBLIC_ID"))
 prefixes = "!$#%^&*"
 
 ChatSystem = Chats()  # Подключенные к оповещению чаты
-Notifier = Notificator(ChatSystem, timings=["05:10"])  # Система оповещений
+Notifier = Notificator(ChatSystem, timings=["07:00", "19:00"])  # Система оповещений
 BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945], notificator=Notifier)  # Бот
 
 basic_keyboard = get_keyboard_string(BASIC_KEYBOARD)  # Стандартная Not-Inline клавиатура
