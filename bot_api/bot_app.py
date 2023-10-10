@@ -59,8 +59,7 @@ async def send_daily(peer, args):
             return peer, \
                 f"Ежедневное расписание для группы {groupname}.", \
                 image_to_bytes(daily_image(groupname))
-        else:
-            return peer, "К данному диалогу не подключён номер группы."
+        return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
         groupname = validate_groupname(args[0])
@@ -86,8 +85,7 @@ async def send_weekly(peer, args):
             return peer, \
                 f"Недельное расписание для группы {groupname}.", \
                 image_to_bytes(weekly_images(get_tag(groupname)))
-        else:
-            return peer, "К данному диалогу не подключён номер группы."
+        return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
         groupname = validate_groupname(args[0])
