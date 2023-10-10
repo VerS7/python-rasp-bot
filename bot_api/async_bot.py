@@ -3,8 +3,9 @@
 Модуль логики работы асинхронного бота
 """
 import asyncio
+import json
 
-from typing import Callable, Union, List
+from typing import Callable, Union, List, Any
 from time import sleep
 from functools import wraps
 
@@ -46,7 +47,7 @@ class ApiAccess:
                            peer_id: str,
                            message: str,
                            attachment: Union[list, str, None] = None,
-                           vk_keyboard: str = None) -> int:
+                           vk_keyboard: str = None) -> Any:
         """
         Отправляет сообщение по peer_id диалога
         :param str vk_keyboard: JSON в виде строки с VK клавиатурой.
@@ -148,6 +149,7 @@ class AsyncVkBot(ApiAccess):
     """
     Класс работы ВК бота
     """
+
     def __init__(self, access_token: str, pub_id: int,
                  prefixes: str = "!#", admin_ids: list = None, notificator=None):
         """
@@ -173,21 +175,33 @@ class AsyncVkBot(ApiAccess):
 
                 peer = event["object"]["message"]["peer_id"]  # peer_id диалога с новым сообщением
                 message = event["object"]["message"]["text"]  # текст сообщения
+                payload = event["object"]["message"].get("payload", None)  # Payload сообщения
 
                 command = Command(message, self.__prefixes)  # обработка сообщения
                 if command.is_command() and command.command in self.__commands:
-                    asyncio.create_task(self.__commands[command.command](peer, command.args))
-                    logging.info(
-                        f"Вызвана комманда: <{command.command}>({command.args}). PeerID: {peer}")
+                    await self.run_command(command.command, peer, command.args)
+
+                if payload:
+                    await self.run_command(json.loads(payload)["command"], peer)
+
+    async def run_command(self, command: str, peer_id: int, args: list = None) -> None:
+        """
+        Создаёт async задачу по комманде
+        :param str command: комманда, по которой будет выполнена функция из пула комманд.
+        :param int peer_id:
+        :param list args: Аргументы комманды или None
+        """
+        asyncio.create_task(self.__commands[command](peer_id, args))
+        logging.info(f"Вызвана комманда: <{command}>({args}). PeerID: {peer_id}")
 
     def command(self, command: Union[str, None] = None,
-                replaceable: bool = False,
                 placeholder: Union[str, None] = None,
+                keyboard: str = None,
                 admin: bool = False) -> Callable:
         """
         Декоратор для объявления команды и ответа на неё
         :param str command: команда, которую слушает event listener
-        :param bool replaceable: изменяется ли сообщение в процессе обработки
+        :param str keyboard: клавиатура
         :param str placeholder: сообщение, которое будет изменено
         :param bool admin: админ-команда или нет. !Привязка идёт к чатам, а не к конкретным юзерам!
         :return: command-wrapper
@@ -196,37 +210,41 @@ class AsyncVkBot(ApiAccess):
         def __command(__func: Callable):
             @wraps(__func)
             async def __wrapper(*args, **kwargs):
-                attachment = None
+                attach = None     # attachment (изображение)
+                message_id = 0    # Базовый message id
+                peer = args[0]    # peer id, возвращаемый командой
+                keyboard_ = None  # ВК клавиатура
+
+                if str(peer)[0] != 2:
+                    keyboard_ = keyboard
 
                 logging.info(
-                    msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {args[0]}")
+                    msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {peer}")
 
                 if admin and not (args[0] in self.__admins):  # Если админ-команда не от админа
                     return None
 
-                if replaceable and placeholder:  # Если есть placeholder и сообщение replaceable
-                    message_id = await self.send_message(peer_id=args[0],
+                if placeholder:  # Если есть placeholder
+                    message_id = await self.send_message(peer_id=peer,
                                                          message=placeholder,
-                                                         vk_keyboard=keyboard)
-
-                    result = await __func(*args, **kwargs)
-
-                    if message_id != 0:
-                        if len(result) == 3:
-                            attachment = await self.image_attachments(result[0], result[2])
-                        return await self.edit_message(peer_id=args[0], message=result[1],
-                                                       message_id=message_id, attachment=attachment)
-
-                    logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
-                                     f"Невозможно заменить сообщение")
+                                                         vk_keyboard=keyboard_)
 
                 result = await __func(*args, **kwargs)
 
-                if len(result) == 3:
-                    attachment = await self.image_attachments(result[0], result[2])
+                if placeholder and message_id != 0:
+                    if len(result) == 3:
+                        attach = await self.image_attachments(peer, result[2])
+                    return await self.edit_message(peer_id=peer, message=result[1],
+                                                   message_id=message_id, attachment=attach)
+                else:
+                    logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
+                                     f"Невозможно заменить сообщение")
 
-                return await self.send_message(peer_id=result[0], message=result[1],
-                                               attachment=attachment)
+                if len(result) == 3:
+                    attach = await self.image_attachments(peer, result[2])
+
+                return await self.send_message(peer_id=peer, message=result[1],
+                                               attachment=attach, vk_keyboard=keyboard_)
 
             self.__commands[command] = __wrapper  # Отправка команды в пул доступных команд
 
