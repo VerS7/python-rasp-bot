@@ -18,6 +18,10 @@ from rasp_api.log_conf import *
 from bot_api.command_parser import Command
 from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
 
+from bot_api.utility import load_txt
+
+GREETING_FILE = path.join(path.dirname(path.abspath(__file__)), "../files/info.txt")
+GREETING_TEXT = load_txt(GREETING_FILE)  # Текст с информацией о боте
 EXC_DELAY = 10
 
 
@@ -184,7 +188,7 @@ class AsyncVkBot(ApiAccess):
 
                 if payload:
                     if json.loads(payload)["command"] == "start":
-                        await self.send_message(peer, message="Привет!",
+                        await self.send_message(peer, message=GREETING_TEXT,
                                                 vk_keyboard=get_keyboard_string(BASIC_KEYBOARD))
                     else:
                         await self.run_command(json.loads(payload)["command"], peer)
