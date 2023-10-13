@@ -2,7 +2,7 @@
 """
 Модуль системы оповещений.
 """
-from typing import Callable, Union, Any
+from typing import Callable
 from asyncio import sleep
 
 from rasp_api.schedule import daily_image, is_empty
