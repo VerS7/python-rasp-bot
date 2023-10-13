@@ -10,8 +10,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 IMAGE_SIZE = (1200, 1500)
-MAIN_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=35)
-OTHER_IMAGE_FONT = ImageFont.truetype("impact.ttf", size=50)
+MAIN_IMAGE_FONT = ImageFont.truetype("../files/impact.ttf", size=35)
+OTHER_IMAGE_FONT = ImageFont.truetype("../files/impact.ttf", size=50)
 BG_IMAGE = path.join(path.dirname(path.abspath(__file__)), "../files/raspback.png")
 
 
