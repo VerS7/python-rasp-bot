@@ -9,10 +9,10 @@ from .parsing import *
 from PIL import Image, ImageDraw, ImageFont
 
 IMAGE_SIZE = (1200, 1500)
-FONT_PATH = path.join(path.dirname(path.abspath(__file__)), "files/impact.ttf")
+FONT_PATH = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/impact.ttf")
 MAIN_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=35)
 OTHER_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=50)
-BG_IMAGE = path.join(path.dirname(path.abspath(__file__)), "files/raspback.ttf")
+BG_IMAGE = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/raspback.ttf")
 
 
 def __prettify_for_image(schedule: list) -> list:
