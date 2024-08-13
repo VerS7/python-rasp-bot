@@ -4,16 +4,19 @@
 """
 import asyncio
 import json
+from os import path
+from time import sleep
 
 from typing import Callable, Union, List, Any
-from time import sleep
 from functools import wraps
 
 from aiovk import API, TokenSession
 from aiovk.longpoll import BotsLongPoll
-from aiohttp import ClientSession, FormData
+from aiovk.drivers import HttpDriver
 
-from rasp_api.log_conf import *
+from aiohttp import ClientSession, ClientTimeout, TCPConnector, FormData
+
+from loguru import logger
 
 from bot_api.command_parser import Command
 from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
@@ -34,19 +37,26 @@ class ApiAccess:
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         """
-        self.access, self.pubid = access_token, pub_id
+        self._access, self._pubid = access_token, pub_id
 
-        self.session: TokenSession = None
-        self.api: API = None
-        self.longpoll: BotsLongPoll = None
+        self._loop = asyncio.new_event_loop()
+
+        self._timeout = ClientTimeout()
+        self.httpsession = ClientSession(connector=TCPConnector(ssl=False, loop=self._loop))
+
+        self.vksession: TokenSession | None = None
+        self._driver = HttpDriver(loop=self._loop, session=self.httpsession, timeout=self._timeout)
+
+        self.api: API | None = None
+        self.longpoll: BotsLongPoll | None = None
 
     def connect(self, access_token: str, pub_id: int):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         """
-        self.session = TokenSession(access_token=access_token)
-        self.api = API(self.session)
+        self.vksession = TokenSession(access_token=access_token, driver=self._driver)
+        self.api = API(self.vksession)
         self.longpoll = BotsLongPoll(self.api, group_id=pub_id)
 
     async def send_message(self,
@@ -76,7 +86,7 @@ class ApiAccess:
                 _attachment = attachment
             param["attachment"] = _attachment
 
-        return await self.session.send_api_request("messages.send", param)
+        return await self.vksession.send_api_request("messages.send", param)
 
     async def edit_message(self,
                            peer_id: str,
@@ -106,15 +116,16 @@ class ApiAccess:
                 _attachment = attachment
             param["attachment"] = _attachment
 
-        await self.session.send_api_request("messages.edit", param)
+        await self.vksession.send_api_request("messages.edit", param)
 
     async def __get_photo_server_url(self, peer_id: int) -> str:
         """
         :param int peer_id: peer_id диалога
         :return: url сервера для загрузки изображений
         """
-        response = await self.session.send_api_request("photos.getMessagesUploadServer",
-                                                       {"peer_id": peer_id})
+        response = await self.vksession.send_api_request("photos.getMessagesUploadServer",
+                                                          {"peer_id": peer_id})
+
         return response["upload_url"]
 
     async def __upload_image(self, url: str, image: bytes) -> dict:
@@ -126,9 +137,8 @@ class ApiAccess:
         form_data = FormData()
         form_data.add_field('photo', image, filename='rasp_image.png')
 
-        async with ClientSession() as session:
-            async with session.post(url, data=form_data) as response:
-                return await response.json(content_type=None)
+        async with self.httpsession.post(url, data=form_data) as response:
+            return await response.json(content_type=None)
 
     async def image_attachments(self, peer_id: int, images: Union[List[bytes], bytes]) -> List[str]:
         """
@@ -145,7 +155,7 @@ class ApiAccess:
 
         for image in images:
             response = await self.__upload_image(url, image)
-            img_response = await self.session.send_api_request("photos.saveMessagesPhoto", response)
+            img_response = await self.vksession.send_api_request("photos.saveMessagesPhoto", response)
             attachments.append(f"photo{img_response[0]['owner_id']}_{img_response[0]['id']}")
 
         return attachments
@@ -166,10 +176,10 @@ class AsyncVkBot(ApiAccess):
         """
         super().__init__(access_token, pub_id)
 
-        self.__admins = admin_ids
-        self.__notificator = notificator
-        self.__prefixes = prefixes
-        self.__commands = {}  # словарь {команда: функция} для вызовов из цикла обработки сообщений
+        self.admins = admin_ids
+        self.notificator = notificator
+        self.prefixes = prefixes
+        self.commands = {}  # словарь {команда: функция} для вызовов из цикла обработки сообщений
 
     async def __main(self):
         """
@@ -182,13 +192,14 @@ class AsyncVkBot(ApiAccess):
                 message = event["object"]["message"]["text"]  # текст сообщения
                 payload = event["object"]["message"].get("payload", None)  # Payload сообщения
 
-                command = Command(message, self.__prefixes)  # обработка сообщения
-                if command.is_command() and command.command in self.__commands:
+                command = Command(message, self.prefixes)  # обработка сообщения
+                if command.is_command() and command.command in self.commands:
                     await self.run_command(command.command, peer, command.args)
 
                 if payload:
                     if json.loads(payload)["command"] == "start":
-                        await self.send_message(peer, message=GREETING_TEXT,
+                        await self.send_message(peer,
+                                                message=GREETING_TEXT,
                                                 vk_keyboard=get_keyboard_string(BASIC_KEYBOARD))
                     else:
                         await self.run_command(json.loads(payload)["command"], peer)
@@ -200,8 +211,8 @@ class AsyncVkBot(ApiAccess):
         :param int peer_id:
         :param list args: Аргументы комманды или None
         """
-        asyncio.create_task(self.__commands[command](peer_id, args))
-        logging.info(f"Вызвана комманда: <{command}>({args}). PeerID: {peer_id}")
+        await self._loop.create_task(self.commands[command](peer_id, args))
+        logger.info(f"Вызвана комманда: <{command}>({args}). PeerID: {peer_id}")
 
     def command(self, command: Union[str, None] = None,
                 placeholder: Union[str, None] = None,
@@ -227,10 +238,9 @@ class AsyncVkBot(ApiAccess):
                 if str(peer)[0] != 2:
                     keyboard_ = keyboard
 
-                logging.info(
-                    msg=f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {peer}")
+                logger.info(f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {peer}")
 
-                if admin and not args[0] in self.__admins:  # Если админ-команда не от админа
+                if admin and not args[0] in self.admins:  # Если админ-команда не от админа
                     return None
 
                 if placeholder:  # Если есть placeholder
@@ -247,8 +257,7 @@ class AsyncVkBot(ApiAccess):
                                                    message_id=message_id, attachment=attach)
 
                 if placeholder and message_id == 0:
-                    logging.info(msg=f"MessageID для замены сообщения: {message_id}. "
-                                 f"Невозможно заменить сообщение")
+                    logger.info(f"MessageID для замены сообщения: {message_id}. Невозможно заменить сообщение.")
 
                 if len(result) == 3:
                     attach = await self.image_attachments(peer, result[2])
@@ -256,7 +265,7 @@ class AsyncVkBot(ApiAccess):
                 return await self.send_message(peer_id=peer, message=result[1],
                                                attachment=attach, vk_keyboard=keyboard_)
 
-            self.__commands[command] = __wrapper  # Отправка команды в пул доступных команд
+            self.commands[command] = __wrapper  # Отправка команды в пул доступных команд
 
             return __wrapper
 
@@ -266,22 +275,23 @@ class AsyncVkBot(ApiAccess):
         """
         Запуск асинхронного бота
         """
-        logging.info(msg="Бот запущен.")
-        self.connect(self.access, self.pubid)
+        logger.info("Бот запущен.")
+
+        self.connect(self._access, self._pubid)
+
         while True:
             try:
-                loop = asyncio.get_event_loop()
-                tasks = [loop.create_task(self.__main())]
-                if self.__notificator:
-                    tasks.append(loop.create_task(self.__notificator.run(self.send_message,
-                                                                         self.image_attachments)))
-                loop.run_until_complete(asyncio.gather(*tasks))
+                tasks = [self._loop.create_task(self.__main())]
+                if self.notificator:
+                    tasks.append(self._loop.create_task(self.notificator.run(self.send_message,
+                                                                             self.image_attachments)))
+                self._loop.run_until_complete(asyncio.gather(*tasks))
 
             except KeyboardInterrupt:
-                logging.info(msg="Отключение...")
+                logger.info("Отключение...")
 
-            except Exception as exc:
-                logging.error(exc)
-                logging.info(msg=f"Ожидание: {EXC_DELAY}s.")
-                self.connect(self.access, self.pubid)
+            except Exception as e:
+                logger.error(e)
+                logger.info(f"Ожидание: {EXC_DELAY}s.")
+                self.connect(self._access, self._pubid)
                 sleep(EXC_DELAY)

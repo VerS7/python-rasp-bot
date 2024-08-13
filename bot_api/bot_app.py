@@ -33,7 +33,6 @@ BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945], notificator=Notifier) 
 basic_keyboard = get_keyboard_string(BASIC_KEYBOARD)  # Стандартная Not-Inline клавиатура
 
 
-# Возвращает стандартную информацию о боте в диалог
 @BotApp.command(command="инфо", keyboard=basic_keyboard)
 async def send_info(peer, args):
     """
@@ -44,7 +43,6 @@ async def send_info(peer, args):
     return peer, GREETING_TEXT
 
 
-# Возвращает расписание на день по группе в диалог
 @BotApp.command(command="расп", placeholder="Подождите, идёт обработка...",
                 keyboard=basic_keyboard)
 async def send_daily(peer, args):
@@ -70,7 +68,6 @@ async def send_daily(peer, args):
     return peer, "Неверный или отсутствует номер группы."
 
 
-# Возвращает недельное расписание по группе в диалог
 @BotApp.command(command="нрасп", placeholder="Подождите, идёт обработка...",
                 keyboard=basic_keyboard)
 async def send_weekly(peer, args):
@@ -96,7 +93,6 @@ async def send_weekly(peer, args):
     return peer, "Неверный или отсутствует номер группы."
 
 
-# Возвращает доступные группы в диалог
 @BotApp.command(command="группы", keyboard=basic_keyboard)
 async def send_groups(peer, args):
     """
@@ -108,7 +104,6 @@ async def send_groups(peer, args):
     return peer, f"Доступные группы: \n{groups}."
 
 
-# Подключает диалог к системе оповещений/быстрых вызовов
 @BotApp.command(command="подключить")
 async def notify_connect(peer, args):
     """
@@ -130,7 +125,6 @@ async def notify_connect(peer, args):
     return peer, "Неправильный номер группы."
 
 
-# Отключает диалог от системы оповещений/быстрых вызовов
 @BotApp.command(command="отключить")
 async def notify_disconnect(peer, args):
     """
@@ -146,7 +140,6 @@ async def notify_disconnect(peer, args):
     return peer, "Данный чат не подключён к системе оповещений."
 
 
-# Админ-функционал
 @BotApp.command(command="admin", admin=True)
 async def admin_manage(peer, args):
     """
