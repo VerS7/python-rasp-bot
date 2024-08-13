@@ -23,11 +23,12 @@ from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
 
 from bot_api.utility import load_txt
 
-GREETING_FILE = path.join(path.dirname(path.abspath(__file__)), "../files/info.txt")
+GREETING_FILE = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/info.txt")
+
 GREETING_TEXT = load_txt(GREETING_FILE)  # Текст с информацией о боте
 EXC_DELAY = 10
 
-logger.add(path.join(path.dirname(path.abspath(__file__)), "../files/debug.log"), rotation="2 MB")
+logger.add(path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/debug.log"), rotation="2 MB")
 
 
 class ApiAccess:
