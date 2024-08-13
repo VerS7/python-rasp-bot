@@ -1,7 +1,8 @@
-/test.py
-/reserve/
-/dev files/
-/Errors.log
-/.idea/
-/settings.ini
-/chats_list.json
+.gitignore
+.idea/
+.files/chats_list.json
+.files/.env
+.venv/
+test.py
+test.html
+backup.zip
