@@ -27,6 +27,8 @@ GREETING_FILE = path.join(path.dirname(path.abspath(__file__)), "../files/info.t
 GREETING_TEXT = load_txt(GREETING_FILE)  # Текст с информацией о боте
 EXC_DELAY = 10
 
+logger.add(path.join(path.dirname(path.abspath(__file__)), "../files/debug.log"), rotation="2 MB")
+
 
 class ApiAccess:
     """
