@@ -1,4 +1,4 @@
-# Rasp-Bot
+# Rasp-Bot (Legacy)
 
 ### University project of schedule sending VKontakte bot
 
