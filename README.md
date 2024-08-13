@@ -4,4 +4,4 @@
 
 ### Пример использования
 
- - ![](https://github.com/VerS7/python-rasp-bot/blob/main/example.png)
+![](https://github.com/VerS7/python-rasp-bot/blob/main/example.png)
