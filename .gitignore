@@ -1,8 +1,5 @@
 .gitignore
 .idea/
-.files/chats_list.json
-.files/.env
+/files/chats.json
+/files/.env
 .venv/
-test.py
-test.html
-backup.zip
