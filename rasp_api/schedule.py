@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
 """
-Создание изображений с расписанием.
+Создание изображений с расписанием
 """
 from os import path
-from typing import Union
+from typing import List, Dict, Tuple
 
-from .parsing import *
+from .parsing import TagsParser, DailyParser, WeekParser, MainParser
 from PIL import Image, ImageDraw, ImageFont
 
 IMAGE_SIZE = (1200, 1500)
@@ -15,23 +14,26 @@ OTHER_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=50)
 BG_IMAGE = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/raspback.png")
 
 
-def __prettify_for_image(schedule: list) -> list:
+def _prettify_for_image(schedule: list) -> list:
     """
     Возвращает подготовленный для изображения список строк
     :param list schedule: список расписания конкретной группы
     """
     result = []
     for elem in schedule:
-        result.append(" ".join(elem[0:2]))
-        if len(elem) > 2:
-            result.append("\n".join([__prettify_length(line) for line in elem[2::]]))
-        else:
-            pass
+        result.append(elem[0])
+
+        if elem[1]:
+            result.append(_prettify_length(elem[1][0]))
+            result.append(elem[1][1]) if elem[1][1] else None
+            result.append(elem[1][2]) if elem[1][2] else None
+
         result.append("-" * 90)
+
     return result
 
 
-def __prettify_length(string: str) -> str:
+def _prettify_length(string: str) -> str:
     """
     Укорачивает длинные строки
     :param string: Строка
@@ -44,103 +46,88 @@ def __prettify_length(string: str) -> str:
     return string
 
 
-def daily_image(groupname: str,
-                soup: BeautifulSoup = None,
-                resize_multiplier: Union[None, float] = None) -> Image.Image:
-    """
-    Расписание на день в PIL Image object
-    :param str groupname: название/номер группы
-    :param resize_multiplier: Множитель размера изображения.
-    1 = default, 0.5 - изображение в 2 раза меньше
-    """
-    if soup:
-        parsed = soup
-    else:
-        parsed = parse_request(URL_DAILY)
+class ScheduleImageGenerator:
+    def __init__(self, resize_multiplier: float | None = None):
+        self.resize_multiplier = resize_multiplier
+        self._tagsparser = TagsParser()
 
-    background = Image.open(BG_IMAGE)
-    rasp_image = ImageDraw.Draw(background)
+    async def create_daily(self, groupname: str) -> Image.Image:
+        """
+        Создаёт расписание на день по номеру группы
+        :param str groupname: номер группы
+        """
+        group = await self._tagsparser.validate(groupname)
+        if not group:
+            raise ValueError(f"Нет совпадений групп с названием {group}")
 
-    update = get_update(parsed)
-    time = get_day(parsed)
-    daily = __prettify_for_image(get_daily(groupname, parsed))
-
-    rasp_image.text((460, 100), time, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-    rasp_image.text((510, 160), groupname, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-    rasp_image.text((120, 240), "\n".join(daily), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
-    rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-
-    if resize_multiplier:
-        return background.resize((int(IMAGE_SIZE[0] * resize_multiplier),
-                                  int(IMAGE_SIZE[1] * resize_multiplier)))
-    return background.resize(IMAGE_SIZE)
-
-
-def __create_images(grouptag: str,
-                    rasp_type: str,
-                    resize_multiplier:
-                    Union[None, float] = None) -> List[Image.Image]:
-    """
-    Создаёт список недельного/основого расписания в PIL Image objects
-    :param str grouptag: тэг группы
-    :param str rasp_type: тип расписания. week - недельное, main - основное
-    :param resize_multiplier: Множитель размера изображения. 
-    1 = default, 0.5 - изображение в 2 раза меньше
-    :return: Список с PIL объектами изображений недельного расписания
-    """
-    rasp = []
-    result = []
-    size = IMAGE_SIZE
-
-    if rasp_type == "week":
-        rasp = get_group_week(grouptag)
-    if rasp_type == "main":
-        rasp = get_group_main(grouptag)
-
-    if resize_multiplier:
-        size = (int(IMAGE_SIZE[0] * resize_multiplier), int(IMAGE_SIZE[1] * resize_multiplier))
-
-    group: str = rasp[0]
-    update: str = rasp[1]
-    schedule: List[dict] = rasp[2]
-
-    for day in schedule:
         background = Image.open(BG_IMAGE)
-        rasp_image = ImageDraw.Draw(background)
-        prettified = __prettify_for_image(list(*day.values()))
+        image = ImageDraw.Draw(background)
 
-        date = str(*list(day.keys()))
-        date_xy = (550, 100)
-        if len(date) > 8:
-            date_xy = (460, 100)
+        daily = DailyParser()
+        update = await daily.get_update()
+        day = await daily.get_day()
+        schedule = _prettify_for_image(await daily.get_daily(group[0]))
 
-        rasp_image.text(date_xy, date, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-        rasp_image.text((510, 160), group, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-        rasp_image.text((120, 240), "\n".join(prettified), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
-        rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+        image.text((460, 100), day, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+        image.text((510, 160), group[0], font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+        image.text((120, 240), "\n".join(schedule), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
+        image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
 
-        result.append(background.resize(size))
+        if self.resize_multiplier:
+            return background.resize((int(IMAGE_SIZE[0] * self.resize_multiplier),
+                                      int(IMAGE_SIZE[1] * self.resize_multiplier)))
 
-    return result
+        return background.resize(IMAGE_SIZE)
 
+    async def create_week(self, groupname: str) -> List[Image.Image]:
+        """
+        Создаёт список недельного расписания по номеру группы
+        :param str groupname: номер группы
+        """
+        group = await self._tagsparser.validate(groupname)
+        if not group:
+            raise ValueError(f"Нет совпадений групп с названием {group}")
 
-def weekly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -> List[Image.Image]:
-    """
-    Создаёт список недельного расписания в PIL Image objects
-    :param str grouptag: тэг группы
-    :param resize_multiplier: Множитель размера изображения.
-    1 = default, 0.5 - изображение в 2 раза меньше
-    :return: Список с PIL объектами изображений недельного расписания
-    """
-    return __create_images(grouptag, "week", resize_multiplier)[0:7]
+        parser = WeekParser(group[1])
+        return self.__create_images(group[0], await parser.get_update(), await parser.get_week())
 
+    async def create_main(self, groupname: str) -> List[Image.Image]:
+        """
+        Создаёт список основного расписания по номеру группы
+        :param str groupname: номер группы
+        """
+        group = await self._tagsparser.validate(groupname)
+        if not group:
+            raise ValueError(f"Нет совпадений групп с названием {group}")
 
-def mainly_images(grouptag: str, resize_multiplier: Union[None, float] = None) -> List[Image.Image]:
-    """
-    Создаёт список основого расписания в PIL Image objects
-    :param str grouptag: тэг группы
-    :param resize_multiplier: Множитель размера изображения.
-    1 = default, 0.5 - изображение в 2 раза меньше
-    :return: Список с PIL объектами изображений недельного расписания
-    """
-    return __create_images(grouptag, "week", resize_multiplier)
+        parser = MainParser(group[1])
+        return self.__create_images(group[0], await parser.get_update(), await parser.get_main())
+
+    def __create_images(self,
+                        groupname: str,
+                        update: str,
+                        schedule: Dict[str, List[Tuple[str, Tuple[str | None] | None]]]
+                        ) -> List[Image.Image]:
+        result = []
+
+        size = IMAGE_SIZE
+        if self.resize_multiplier:
+            size = (int(IMAGE_SIZE[0] * self.resize_multiplier), int(IMAGE_SIZE[1] * self.resize_multiplier))
+
+        for day, elem in schedule.items():
+            background = Image.open(BG_IMAGE)
+            rasp_image = ImageDraw.Draw(background)
+            prettified = _prettify_for_image(elem)
+
+            day_xy = (550, 100)
+            if len(day) > 8:
+                day_xy = (460, 100)
+
+            rasp_image.text(day_xy, day, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+            rasp_image.text((510, 160), groupname, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+            rasp_image.text((120, 240), "\n".join(prettified), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
+            rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+
+            result.append(background.resize(size))
+
+        return result
