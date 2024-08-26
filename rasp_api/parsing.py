@@ -54,14 +54,14 @@ class Parser:
         Возвращает строку состояния последнего обновления расписания
         :param BeautifulSoup soup: распарсеный HTML
         """
-        return soup.find('.ref').get_text()
+        return soup.find("div", {"class": "ref"}).get_text().strip("\n\r")
 
     def get_day(self, soup: BeautifulSoup) -> str:
         """
         Возвращает строку текущего дня
         :param BeautifulSoup soup: распарсеный HTML
         """
-        return soup.find('.zgr').get_text()
+        return soup.find("li", {"class": "zgr"}).get_text()
 
     def get_exact_update(self, soup: BeautifulSoup) -> Tuple[str, str]:
         """
@@ -264,11 +264,14 @@ class WeekParser(Parser):
         days = {}
         current = []
 
-        for td in self._soup.find("table", {"class": "inf"}).find_all("td")[8::]:
-            if td.attrs["class"][0] == "hd0":  # Разделитель групп
+        page = self._soup.find("table", {"class": "inf"}).find_all("td")[8::]
+        for i, td in enumerate(page):
+            if td.attrs["class"][0] == "hd0" or i+1 == len(page):  # Разделитель групп
                 if len(current) == 0:  # Пропуск в случае если не набралось расписание
                     continue
                 day, schedule = self._process_raw_schedule(current)
+                if day in days.keys():
+                    day = f"{day}-2"
                 days[day] = schedule
                 current = []
                 continue
