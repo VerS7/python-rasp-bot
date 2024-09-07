@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Модуль логики работы асинхронного бота
 """
@@ -42,7 +41,7 @@ class ApiAccess:
         """
         self._access, self._pubid = access_token, pub_id
 
-        self._loop = asyncio.new_event_loop()
+        self._loop = asyncio.get_event_loop()
 
         self._timeout = ClientTimeout()
         self.httpsession = ClientSession(connector=TCPConnector(ssl=False, loop=self._loop))
@@ -209,13 +208,13 @@ class AsyncVkBot(ApiAccess):
 
     async def run_command(self, command: str, peer_id: int, args: list = None) -> None:
         """
-        Создаёт async задачу по комманде
-        :param str command: комманда, по которой будет выполнена функция из пула комманд.
+        Создаёт async задачу по команде
+        :param str command: команда, по которой будет выполнена функция из пула команд.
         :param int peer_id:
-        :param list args: Аргументы комманды или None
+        :param list args: Аргументы команды или None
         """
+        logger.info(f"Вызвана команда: <{command}>({args}). PeerID: {peer_id}")
         await self._loop.create_task(self.commands[command](peer_id, args))
-        logger.info(f"Вызвана комманда: <{command}>({args}). PeerID: {peer_id}")
 
     def command(self, command: Union[str, None] = None,
                 placeholder: Union[str, None] = None,

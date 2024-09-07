@@ -67,6 +67,7 @@ class ScheduleImageGenerator:
         update = await daily.get_update()
         day = await daily.get_day()
         schedule = _prettify_for_image(await daily.get_daily(group[0]))
+        await daily.session.close()
 
         image.text((460, 100), day, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
         image.text((510, 160), group[0], font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
@@ -89,7 +90,10 @@ class ScheduleImageGenerator:
             raise ValueError(f"Нет совпадений групп с названием {group}")
 
         parser = WeekParser(group[1])
-        return self.__create_images(group[0], await parser.get_update(), await parser.get_week())
+        update, week = await parser.get_update(), await parser.get_week()
+        await parser.session.close()
+
+        return self.__create_images(group[0], update, week)
 
     async def create_main(self, groupname: str) -> List[Image.Image]:
         """
@@ -101,7 +105,10 @@ class ScheduleImageGenerator:
             raise ValueError(f"Нет совпадений групп с названием {group}")
 
         parser = MainParser(group[1])
-        return self.__create_images(group[0], await parser.get_update(), await parser.get_main())
+        update, week = await parser.get_update(), await parser.get_week()
+        await parser.session.close()
+
+        return self.__create_images(group[0], update, week)
 
     def __create_images(self,
                         groupname: str,

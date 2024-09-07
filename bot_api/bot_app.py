@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Основная логика приложения.
 """
 from os import getenv, path
 
-from rasp_api.schedule import daily_image, weekly_images
-from rasp_api.gather_tags import get_tags
-from rasp_api.parsing import URL_WEEKLY
-from rasp_api.group_validate import get_tag, validate_groupname
+from rasp_api.schedule import ScheduleImageGenerator
+from rasp_api.parsing import TagsParser
 
 from bot_api.async_bot import AsyncVkBot, GREETING_TEXT
 from bot_api.chats_connector import Chats
@@ -27,9 +24,10 @@ pub_id = int(getenv("PUBLIC_ID"))
 prefixes = "!$#%^&*"
 
 ChatSystem = Chats()  # Подключенные к оповещению чаты
-Notifier = Notificator(ChatSystem, timings=["07:00", "19:00"])  # Система оповещений
+Tags = TagsParser()  # Названия групп и тэги
+ImageGenerator = ScheduleImageGenerator()  # Генератор изображений с расписанием
+Notifier = Notificator(ChatSystem, ImageGenerator, timings=["07:00", "19:00"])  # Система оповещений
 BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945], notificator=Notifier)  # Бот
-
 basic_keyboard = get_keyboard_string(BASIC_KEYBOARD)  # Стандартная Not-Inline клавиатура
 
 
@@ -56,15 +54,16 @@ async def send_daily(peer, args):
             groupname = ChatSystem.get_group(peer)
             return peer, \
                 f"Ежедневное расписание для группы {groupname}.", \
-                image_to_bytes(daily_image(groupname))
+                image_to_bytes(await ImageGenerator.create_daily(groupname))
         return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
-        groupname = validate_groupname(args[0])
-        if groupname:
+        group = await Tags.validate(args[0])
+        if group:
+            groupname = group[0]
             return peer, \
                 f"Ежедневное расписание для группы {groupname}.", \
-                image_to_bytes(daily_image(groupname))
+                image_to_bytes(await ImageGenerator.create_daily(groupname))
     return peer, "Неверный или отсутствует номер группы."
 
 
@@ -81,15 +80,43 @@ async def send_weekly(peer, args):
             groupname = ChatSystem.get_group(peer)
             return peer, \
                 f"Недельное расписание для группы {groupname}.", \
-                image_to_bytes(weekly_images(get_tag(groupname)))
+                image_to_bytes(await ImageGenerator.create_week(groupname))
         return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
-        groupname = validate_groupname(args[0])
-        if groupname:
+        group = await Tags.validate(args[0])
+        if group:
+            groupname = group[0]
             return peer, \
                 f"Недельное расписание для группы {groupname}.", \
-                image_to_bytes(weekly_images(get_tag(groupname)))
+                image_to_bytes(await ImageGenerator.create_week(groupname))
+    return peer, "Неверный или отсутствует номер группы."
+
+
+@BotApp.command(command="орасп", placeholder="Подождите, идёт обработка...",
+                keyboard=basic_keyboard)
+async def send_main(peer, args):
+    """
+    Вовращает основное расписание по номеру группы или подключенному к чату номеру.
+    :param peer: id чата
+    :param args: аргументы, переданные при вызове команды через чат
+    """
+    if args is None:
+        if ChatSystem.in_chats(peer):
+            groupname = ChatSystem.get_group(peer)
+            return peer, \
+                f"Основное расписание для группы {groupname}.", \
+                image_to_bytes(await ImageGenerator.create_main(groupname))
+        return peer, "К данному диалогу не подключён номер группы."
+
+    if args is not None:
+        group = await Tags.validate(args[0])
+
+        if group:
+            groupname = group[0]
+            return peer, \
+                f"Основное расписание для группы {groupname}.", \
+                image_to_bytes(await ImageGenerator.create_main(groupname))
     return peer, "Неверный или отсутствует номер группы."
 
 
@@ -100,7 +127,7 @@ async def send_groups(peer, args):
     :param peer: id чата
     :param args: аргументы, переданные при вызове команды через чат
     """
-    groups = '\n'.join(get_tags(URL_WEEKLY).keys())
+    groups = '\n'.join(await Tags.parse_tags())
     return peer, f"Доступные группы: \n{groups}."
 
 
@@ -117,10 +144,11 @@ async def notify_connect(peer, args):
     if args is None:
         return peer, "Отсутствует номер группы."
 
-    validated = validate_groupname(args[0])
+    validated = await Tags.validate(args[0])
     if validated:
-        ChatSystem.add_group(peer, validated)
-        return peer, f"К чату с ID {peer} подключена группа {validated}"
+        group = validated[0]
+        ChatSystem.add_group(peer, group)
+        return peer, f"К чату с ID {peer} подключена группа {group}"
 
     return peer, "Неправильный номер группы."
 

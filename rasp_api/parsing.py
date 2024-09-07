@@ -1,6 +1,7 @@
 """
 Парсинг данных с сайта расписания.
 """
+import asyncio
 import re
 from typing import Tuple, List, Dict
 from asyncio import new_event_loop, get_event_loop, AbstractEventLoop
