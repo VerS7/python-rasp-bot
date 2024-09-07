@@ -27,7 +27,7 @@ ChatSystem = Chats()  # Подключенные к оповещению чат�
 Tags = TagsParser()  # Названия групп и тэги
 ImageGenerator = ScheduleImageGenerator()  # Генератор изображений с расписанием
 Notifier = Notificator(ChatSystem, ImageGenerator, timings=["07:00", "19:00"])  # Система оповещений
-BotApp = AsyncVkBot(token, pub_id, admin_ids=[406579945], notificator=Notifier)  # Бот
+BotApp = AsyncVkBot(token, pub_id, prefixes, admin_ids=[406579945], notificator=Notifier)  # Бот
 basic_keyboard = get_keyboard_string(BASIC_KEYBOARD)  # Стандартная Not-Inline клавиатура
 
 
