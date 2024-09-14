@@ -2,7 +2,7 @@
 Модуль системы оповещений.
 """
 from datetime import datetime
-from typing import Callable
+from typing import Callable, List, Any, Tuple
 
 from asyncio import sleep
 
@@ -18,7 +18,7 @@ class Notificator:
     """
     Класс работы системы оповещений.
     """
-    def __init__(self, chats: Chats, image_generator: ScheduleImageGenerator,  timings: list, cooldown_s: int = 60):
+    def __init__(self, chats: Chats, image_generator: ScheduleImageGenerator,  timings: list, cooldown_s: int = 30):
         """
         :param Chats chats: Система подключенных чатов
         :param ScheduleImageGenerator image_generator: генератор изображений с расписанием
@@ -40,11 +40,32 @@ class Notificator:
         while True:
             current_time = datetime.now().strftime("%H:%M")
             if current_time in self._timings:
-                logger.info(f"Оповещение по времени: {current_time}.")
+                scheduler = TaskScheduler()
+                logger.info(f"Оповещение по времени: {current_time} запущено.")
 
                 for chat, group in self._chats.get_chats().items():
-                    image = await image_loader(chat, image_to_bytes(await self._imgen.create_daily(group)))
-                    logger.info(f"Оповещение для группы: {group}. PeerID: {chat}")
-                    await sender(chat, f"{current_time} | Оповещение расписания для группы {group}", image)
+                    scheduler.add(self._send, chat, group, sender, image_loader, current_time)
+
+                await scheduler.execute()
+                await sleep(60)
 
             await sleep(self._cd)
+
+    async def _send(self, chat: str, group: str, sender: Callable, image_loader: Callable, current_time: str) -> None:
+        image = await image_loader(chat, image_to_bytes(await self._imgen.create_daily(group)))
+        logger.info(f"Оповещение для группы: {group}. PeerID: {chat}")
+        await sender(chat, f"{current_time} | Оповещение расписания для группы {group}", image)
+
+
+class TaskScheduler:
+    def __init__(self):
+        self._signal = False
+        self._callables: List[Tuple[Callable, Tuple[Any, ...]]] = []
+
+    def add(self, callback: Callable, *args) -> None:
+        self._callables.append((callback, args))
+
+    async def execute(self) -> None:
+        for callback, args in self._callables:
+            await callback(*args)
+        self._signal = True
