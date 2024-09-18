@@ -1,18 +1,22 @@
 """
 Модуль работы системы подключенных чатов
 """
+
 import json
 from os import path
 from typing import Union
 
 
-CHATS_PATH = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/chats.json")
+CHATS_PATH = path.join(
+    path.dirname(path.dirname(path.abspath(__file__))), "files/chats.json"
+)
 
 
 class Chats:
     """
     Класс системы чатов
     """
+
     def __init__(self, file_path: str = CHATS_PATH):
         self.__path = file_path
         self.__chats: dict = self.__load_json()

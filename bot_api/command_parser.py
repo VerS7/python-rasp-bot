@@ -1,6 +1,7 @@
 """
 Модуль обработки комманд
 """
+
 import string
 
 from typing import Union
@@ -17,6 +18,7 @@ class Command:
     """
     Класс парсинга команды из строки
     """
+
     def __init__(self, string_: str, prefixes: Union[str, None] = None):
         """
         :param str string_: строка для парсинга

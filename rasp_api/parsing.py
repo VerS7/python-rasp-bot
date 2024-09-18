@@ -1,6 +1,7 @@
 """
 Парсинг данных с сайта расписания.
 """
+
 import asyncio
 import re
 from typing import Tuple, List, Dict
@@ -25,7 +26,10 @@ class Parser:
     """
     Базовый парсер
     """
-    def __init__(self, loop: AbstractEventLoop | None, session: ClientSession | None = None):
+
+    def __init__(
+        self, loop: AbstractEventLoop | None, session: ClientSession | None = None
+    ):
         if not loop:
             if get_event_loop() is None:
                 self.loop = new_event_loop()
@@ -69,11 +73,15 @@ class Parser:
         Возвращает конкретное значение даты и времени обновления
         :param BeautifulSoup soup: распарсеный HTML
         """
-        match = re.search(r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", self.get_update(soup))
+        match = re.search(
+            r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", self.get_update(soup)
+        )
         if match:
             return match.group(1), match.group(2)
 
-    def _process_raw_schedule(self, raw: List[Tag]) -> Tuple[str, List[Tuple[str, Tuple[str | None] | None]]]:
+    def _process_raw_schedule(
+        self, raw: List[Tag]
+    ) -> Tuple[str, List[Tuple[str, Tuple[str | None] | None]]]:
         schedule_header = raw[0].get_text(separator=" ")
         headers = []
         contents = []
@@ -83,13 +91,19 @@ class Parser:
                 headers.append(elem.get_text(separator=" ").replace("\n", ""))
 
             if elem.attrs["class"][0] == "ur":
-                z1, z2, z3 = (elem.find("a", class_="z1"),
-                              elem.find("a", class_="z2"),
-                              elem.find("a", class_="z3"))
+                z1, z2, z3 = (
+                    elem.find("a", class_="z1"),
+                    elem.find("a", class_="z2"),
+                    elem.find("a", class_="z3"),
+                )
 
-                contents.append((z1.get_text() if z1 else None,
-                                 z2.get_text() if z2 else None,
-                                 z3.get_text() if z3 else None))
+                contents.append(
+                    (
+                        z1.get_text() if z1 else None,
+                        z2.get_text() if z2 else None,
+                        z3.get_text() if z3 else None,
+                    )
+                )
 
             if elem.attrs["class"][0] == "nul":
                 contents.append(None)
@@ -101,12 +115,19 @@ class TagsParser(Parser):
     """
     Парсинг тэгов и названий групп
     """
-    def __init__(self, loop: AbstractEventLoop | None = None, session: ClientSession | None = None):
+
+    def __init__(
+        self,
+        loop: AbstractEventLoop | None = None,
+        session: ClientSession | None = None,
+    ):
         super().__init__(loop, session)
         self._soup = None
         self._tags: Dict[str, str] = {}
 
-    async def parse_tags(self, soup: BeautifulSoup | None = None, force=False) -> Dict[str, str]:
+    async def parse_tags(
+        self, soup: BeautifulSoup | None = None, force=False
+    ) -> Dict[str, str]:
         """
         Парсит название групп и тэгов
         :param BeautifulSoup soup: распарсеный HTML
@@ -118,8 +139,12 @@ class TagsParser(Parser):
         if force or not self._tags:
             self._soup = await self.parse_request(URL_WEEKLY)
 
-            for a in self._soup.find("table", {"class": "inf"}).find_all("a", {"class": "z0"}):
-                self._tags[a.get_text()] = re.search(r"(?<=\D)\d+", a.attrs["href"]).group()
+            for a in self._soup.find("table", {"class": "inf"}).find_all(
+                "a", {"class": "z0"}
+            ):
+                self._tags[a.get_text()] = re.search(
+                    r"(?<=\D)\d+", a.attrs["href"]
+                ).group()
 
             return self._tags
 
@@ -143,11 +168,18 @@ class DailyParser(Parser):
     """
     Парсинг ежедневного расписания по всем группам
     """
-    def __init__(self, loop: AbstractEventLoop | None = None, session: ClientSession | None = None):
+
+    def __init__(
+        self,
+        loop: AbstractEventLoop | None = None,
+        session: ClientSession | None = None,
+    ):
         super().__init__(loop, session)
         self._soup = None
 
-    async def get_all_daily(self) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
+    async def get_all_daily(
+        self,
+    ) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
         """Возвращает текущее дневное расписание для всех групп."""
         if not self._soup:
             self._soup = await self.parse_request(URL_DAILY)
@@ -166,7 +198,9 @@ class DailyParser(Parser):
 
         return groups
 
-    async def get_daily(self, groupname: str) -> List[Tuple[str, Tuple[str | None] | None]]:
+    async def get_daily(
+        self, groupname: str
+    ) -> List[Tuple[str, Tuple[str | None] | None]]:
         """
         Возвращает список расписания на день по имени группы или None
         :param str groupname: номер/название группы
@@ -200,7 +234,9 @@ class DailyParser(Parser):
 
         return super().get_day(self._soup)
 
-    async def get_exact_update(self, soup: BeautifulSoup | None = None) -> Tuple[str, str]:
+    async def get_exact_update(
+        self, soup: BeautifulSoup | None = None
+    ) -> Tuple[str, str]:
         """
         Возвращает конкретное значение даты и времени обновления
         :param BeautifulSoup soup: распарсеный HTML
@@ -218,7 +254,13 @@ class WeekParser(Parser):
     """
     Парсинг недельного расписания конкретной группы
     """
-    def __init__(self, grouptag: str, loop: AbstractEventLoop | None = None, session: ClientSession | None = None):
+
+    def __init__(
+        self,
+        grouptag: str,
+        loop: AbstractEventLoop | None = None,
+        session: ClientSession | None = None,
+    ):
         super().__init__(loop, session)
         self._url = URL_WEEKLY.replace("cg", f"cg{grouptag}")
         self._soup = None
@@ -236,7 +278,9 @@ class WeekParser(Parser):
 
         return super().get_update(self._soup)
 
-    async def get_exact_update(self, soup: BeautifulSoup | None = None) -> Tuple[str, str]:
+    async def get_exact_update(
+        self, soup: BeautifulSoup | None = None
+    ) -> Tuple[str, str]:
         """
         Возвращает конкретное значение даты и времени обновления
         :param BeautifulSoup soup: распарсеный HTML
@@ -249,9 +293,9 @@ class WeekParser(Parser):
 
         return super().get_exact_update(self._soup)
 
-    async def get_week(self,
-                       soup: BeautifulSoup | None = None
-                       ) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
+    async def get_week(
+        self, soup: BeautifulSoup | None = None
+    ) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
         """
         Возвращает недельное расписание.
         :param BeautifulSoup soup: распарсеный HTML
@@ -267,7 +311,7 @@ class WeekParser(Parser):
 
         page = self._soup.find("table", {"class": "inf"}).find_all("td")[8::]
         for i, td in enumerate(page):
-            if td.attrs["class"][0] == "hd0" or i+1 == len(page):  # Разделитель групп
+            if td.attrs["class"][0] == "hd0" or i + 1 == len(page):  # Разделитель групп
                 if len(current) == 0:  # Пропуск в случае если не набралось расписание
                     continue
                 day, schedule = self._process_raw_schedule(current)
@@ -277,7 +321,12 @@ class WeekParser(Parser):
                 current = []
                 continue
 
-            if td.attrs["class"][0] == "hd" and td.get_text() in ("День", "Неделя 1", "Неделя 2", "Пара"):
+            if td.attrs["class"][0] == "hd" and td.get_text() in (
+                "День",
+                "Неделя 1",
+                "Неделя 2",
+                "Пара",
+            ):
                 # Пропуск td, в котором находится структурная информация
                 continue
 
@@ -290,13 +339,19 @@ class MainParser(WeekParser):
     """
     Парсинг основного расписания конкретной группы
     """
-    def __init__(self, grouptag: str, loop: AbstractEventLoop | None = None, session: ClientSession | None = None):
+
+    def __init__(
+        self,
+        grouptag: str,
+        loop: AbstractEventLoop | None = None,
+        session: ClientSession | None = None,
+    ):
         super().__init__(grouptag, loop, session)
         self._url = URL_MAINLY.replace("bg", f"bg{grouptag}")
 
-    async def get_main(self,
-                       soup: BeautifulSoup | None = None
-                       ) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
+    async def get_main(
+        self, soup: BeautifulSoup | None = None
+    ) -> Dict[str, List[Tuple[str, Tuple[str | None] | None]]]:
         """
         Возвращает основное расписание.
         :param BeautifulSoup soup: распарсеный HTML
@@ -311,7 +366,9 @@ class MainParser(WeekParser):
 
 
 class TeachersParser(Parser):
-    def __init__(self, loop: AbstractEventLoop | None, session: ClientSession | None = None):
+    def __init__(
+        self, loop: AbstractEventLoop | None, session: ClientSession | None = None
+    ):
         super().__init__(loop, session)
 
     def get_all_teachers(self, soup: BeautifulSoup) -> list:

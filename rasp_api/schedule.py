@@ -1,6 +1,7 @@
 """
 Создание изображений с расписанием
 """
+
 from os import path
 from typing import List, Dict, Tuple
 
@@ -8,10 +9,14 @@ from .parsing import TagsParser, DailyParser, WeekParser, MainParser
 from PIL import Image, ImageDraw, ImageFont
 
 IMAGE_SIZE = (1200, 1500)
-FONT_PATH = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/impact.ttf")
+FONT_PATH = path.join(
+    path.dirname(path.dirname(path.abspath(__file__))), "files/impact.ttf"
+)
 MAIN_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=35)
 OTHER_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=50)
-BG_IMAGE = path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/raspback.png")
+BG_IMAGE = path.join(
+    path.dirname(path.dirname(path.abspath(__file__))), "files/raspback.png"
+)
 
 
 def _prettify_for_image(schedule: list) -> list:
@@ -71,12 +76,18 @@ class ScheduleImageGenerator:
 
         image.text((460, 100), day, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
         image.text((510, 160), group[0], font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-        image.text((120, 240), "\n".join(schedule), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
+        image.text(
+            (120, 240), "\n".join(schedule), font=MAIN_IMAGE_FONT, fill=(86, 131, 172)
+        )
         image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
 
         if self.resize_multiplier:
-            return background.resize((int(IMAGE_SIZE[0] * self.resize_multiplier),
-                                      int(IMAGE_SIZE[1] * self.resize_multiplier)))
+            return background.resize(
+                (
+                    int(IMAGE_SIZE[0] * self.resize_multiplier),
+                    int(IMAGE_SIZE[1] * self.resize_multiplier),
+                )
+            )
 
         return background.resize(IMAGE_SIZE)
 
@@ -110,16 +121,20 @@ class ScheduleImageGenerator:
 
         return self.__create_images(group[0], update, week)
 
-    def __create_images(self,
-                        groupname: str,
-                        update: str,
-                        schedule: Dict[str, List[Tuple[str, Tuple[str | None] | None]]]
-                        ) -> List[Image.Image]:
+    def __create_images(
+        self,
+        groupname: str,
+        update: str,
+        schedule: Dict[str, List[Tuple[str, Tuple[str | None] | None]]],
+    ) -> List[Image.Image]:
         result = []
 
         size = IMAGE_SIZE
         if self.resize_multiplier:
-            size = (int(IMAGE_SIZE[0] * self.resize_multiplier), int(IMAGE_SIZE[1] * self.resize_multiplier))
+            size = (
+                int(IMAGE_SIZE[0] * self.resize_multiplier),
+                int(IMAGE_SIZE[1] * self.resize_multiplier),
+            )
 
         for day, elem in schedule.items():
             background = Image.open(BG_IMAGE)
@@ -131,9 +146,18 @@ class ScheduleImageGenerator:
                 day_xy = (460, 100)
 
             rasp_image.text(day_xy, day, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-            rasp_image.text((510, 160), groupname, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
-            rasp_image.text((120, 240), "\n".join(prettified), font=MAIN_IMAGE_FONT, fill=(86, 131, 172))
-            rasp_image.text((290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172))
+            rasp_image.text(
+                (510, 160), groupname, font=OTHER_IMAGE_FONT, fill=(86, 131, 172)
+            )
+            rasp_image.text(
+                (120, 240),
+                "\n".join(prettified),
+                font=MAIN_IMAGE_FONT,
+                fill=(86, 131, 172),
+            )
+            rasp_image.text(
+                (290, 1300), update, font=OTHER_IMAGE_FONT, fill=(86, 131, 172)
+            )
 
             result.append(background.resize(size))
 

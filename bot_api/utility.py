@@ -1,6 +1,7 @@
 """
 Utility logic
 """
+
 from typing import Union, List
 from pathlib import Path
 from io import BytesIO
@@ -22,7 +23,7 @@ def image_to_bytes(images: Union[List[Image.Image], Image.Image]) -> List[bytes]
 
     for image in __images:
         with BytesIO() as output:
-            image.save(output, format='PNG')
+            image.save(output, format="PNG")
             __output.append(output.getvalue())
 
     return __output
