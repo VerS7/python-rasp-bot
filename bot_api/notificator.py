@@ -17,11 +17,11 @@ class Notificator:
     """Реализация работы системы оповещений"""
 
     def __init__(
-            self,
-            chats: Chats,
-            image_generator: ScheduleImageGenerator,
-            timings: list,
-            cooldown_s: int = 30,
+        self,
+        chats: Chats,
+        image_generator: ScheduleImageGenerator,
+        timings: list,
+        cooldown_s: int = 30,
     ):
         """
         :param Chats chats: Система подключенных чатов
@@ -64,12 +64,12 @@ class Notificator:
             await sleep(self._cd)
 
     async def _send(
-            self,
-            chat: str,
-            group: str,
-            sender: Callable,
-            image_loader: Callable,
-            current_time: str,
+        self,
+        chat: str,
+        group: str,
+        sender: Callable,
+        image_loader: Callable,
+        current_time: str,
     ) -> None:
         image = await image_loader(
             chat, image_to_bytes(await self._imgen.create_daily(group))
