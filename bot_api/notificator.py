@@ -3,7 +3,7 @@
 """
 
 from datetime import datetime
-from typing import Callable, List, Any, Tuple, Awaitable
+from typing import Callable, List, Any, Tuple, Awaitable, Coroutine
 from asyncio import sleep
 
 from loguru import logger
@@ -58,8 +58,7 @@ class Notificator:
                         current_time,
                     )
 
-                await scheduler.execute()
-                await sleep(60)
+                await scheduler.execute(on_complete=lambda: sleep(60))
 
             await sleep(self._cd)
 
