@@ -175,6 +175,11 @@ class ApiAccess:
 
         for image in images:
             response = await self.__upload_image(url, image)
+
+            if response.get("error_code", None):
+                logger.exception("Не удалось загрузить изображение в ВК.")
+                continue
+
             img_response = await self.vksession.send_api_request(
                 "photos.saveMessagesPhoto", response
             )
@@ -196,27 +201,27 @@ class AsyncVkBot(ApiAccess):
         pub_id: int,
         prefixes: str = "!#",
         admin_ids: list = None,
-        notificator=None,
+        services: list = None,
     ):
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
         :param list prefixes: список доступных префиксов для команд
         :param list admin_ids: PeerID админ-чатов
-        :param notificator: Система оповещений
+        :param services: Дополнительные сервисы
         """
         super().__init__(access_token, pub_id)
 
         self.admins = admin_ids
-        self.notificator = notificator
+        self.services = services
         self.prefixes = prefixes
         self.commands = (
             {}
         )  # словарь {команда: функция} для вызовов из цикла обработки сообщений
 
-    async def __main(self):
+    async def __commands_worker(self) -> None:
         """
-        main бесконечный longpoll цикл обработки сообщений
+        longpoll-цикл обработки сообщений
         """
         async for event in self.longpoll.iter():
             if event["type"] == "message_new":
@@ -299,6 +304,13 @@ class AsyncVkBot(ApiAccess):
                 if placeholder and message_id != 0:
                     if len(result) == 3:
                         attach = await self.image_attachments(peer, result[2])
+                        if not attach:
+                            return await self.edit_message(
+                                peer_id=peer,
+                                message="Не удалось загрузить расписание. Попробуйте ещё раз.",
+                                message_id=message_id,
+                            )
+
                     return await self.edit_message(
                         peer_id=peer,
                         message=result[1],
@@ -334,26 +346,28 @@ class AsyncVkBot(ApiAccess):
         Запуск асинхронного бота
         """
         logger.info("Бот запущен.")
-
         self.connect(self._access, self._pubid)
 
         while True:
             try:
-                tasks = [self._loop.create_task(self.__main())]
-                if self.notificator:
-                    tasks.append(
-                        self._loop.create_task(
-                            self.notificator.run(
-                                self.send_message, self.image_attachments
-                            )
-                        )
+                services = [
+                    self._loop.create_task(s.run(self))
+                    for s in self.services
+                    if not s.running
+                ]
+                # print(services)
+                self._loop.run_until_complete(
+                    asyncio.gather(
+                        self._loop.create_task(self.__commands_worker()), *services
                     )
-                self._loop.run_until_complete(asyncio.gather(*tasks))
+                )
 
             except KeyboardInterrupt:
                 logger.info("Отключение...")
+                return
 
             except Exception as e:
+                raise e
                 logger.error(e)
                 logger.info(f"Ожидание: {EXC_DELAY}s.")
                 self.connect(self._access, self._pubid)

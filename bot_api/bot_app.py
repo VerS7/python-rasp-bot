@@ -9,7 +9,7 @@ from rasp_api.parsing import TagsParser
 
 from bot_api.async_bot import AsyncVkBot, GREETING_TEXT
 from bot_api.chats_connector import Chats
-from bot_api.notificator import Notificator
+from bot_api.services import NotificatorService
 from bot_api.utility import image_to_bytes
 from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
 
@@ -29,11 +29,11 @@ prefixes = "!$#%^&*"
 ChatSystem = Chats()  # Подключенные к оповещению чаты
 Tags = TagsParser()  # Названия групп и тэги
 ImageGenerator = ScheduleImageGenerator()  # Генератор изображений с расписанием
-Notifier = Notificator(
+Notificator = NotificatorService(
     ChatSystem, ImageGenerator, timings=["07:00", "19:00"]
 )  # Система оповещений
 BotApp = AsyncVkBot(
-    token, pub_id, prefixes, admin_ids=[406579945], notificator=Notifier
+    token, pub_id, prefixes, admin_ids=[406579945], services=[Notificator]
 )  # Бот
 basic_keyboard = get_keyboard_string(
     BASIC_KEYBOARD
