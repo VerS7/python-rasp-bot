@@ -7,7 +7,7 @@ import json
 from os import path
 from time import sleep
 
-from typing import Callable, Union, List, Any
+from typing import Callable, List, Any, Dict, Awaitable
 from functools import wraps
 
 from aiovk import API, TokenSession
@@ -41,7 +41,7 @@ class ApiAccess:
     Взаимодействие с API
     """
 
-    def __init__(self, access_token: str, pub_id: int):
+    def __init__(self, access_token: str, pub_id: int) -> None:
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
@@ -63,7 +63,7 @@ class ApiAccess:
         self.api: API | None = None
         self.longpoll: BotsLongPoll | None = None
 
-    def connect(self, access_token: str, pub_id: int):
+    def connect(self, access_token: str, pub_id: int) -> None:
         """
         :param str access_token: токен доступа группы ВК
         :param int pub_id: id группы ВК
@@ -76,7 +76,7 @@ class ApiAccess:
         self,
         peer_id: str,
         message: str,
-        attachment: Union[list, str, None] = None,
+        attachment: List[str] | str | None = None,
         vk_keyboard: str = None,
     ) -> Any:
         """
@@ -108,7 +108,7 @@ class ApiAccess:
         peer_id: str,
         message: str,
         message_id: int,
-        attachment: Union[list, str, None] = None,
+        attachment: List[str] | str | None = None,
         vk_keyboard: str = None,
     ) -> None:
         """
@@ -146,7 +146,7 @@ class ApiAccess:
 
         return response["upload_url"]
 
-    async def __upload_image(self, url: str, image: bytes) -> dict:
+    async def __upload_image(self, url: str, image: bytes) -> Dict[...]:
         """
         :param str url: url сервера для загрузки изображений
         :param bytes image: изображение в виде bytes
@@ -159,7 +159,7 @@ class ApiAccess:
             return await response.json(content_type=None)
 
     async def image_attachments(
-        self, peer_id: int, images: Union[List[bytes], bytes]
+        self, peer_id: int, images: List[bytes] | bytes
     ) -> List[str]:
         """
         Создаёт vk attachment из байтов изображений
@@ -201,8 +201,8 @@ class AsyncVkBot(ApiAccess):
         access_token: str,
         pub_id: int,
         prefixes: str = "!#",
-        admin_ids: list = None,
-        services: list = None,
+        admin_ids: List[int] = None,
+        services: List[...] = None,
     ):
         """
         :param str access_token: токен доступа группы ВК
@@ -249,7 +249,9 @@ class AsyncVkBot(ApiAccess):
                     else:
                         await self.run_command(json.loads(payload)["command"], peer)
 
-    async def run_command(self, command: str, peer_id: int, args: list = None) -> None:
+    async def run_command(
+        self, command: str, peer_id: int, args: List[...] = None
+    ) -> None:
         """
         Создаёт async задачу по команде
         :param str command: команда, по которой будет выполнена функция из пула команд.
@@ -261,8 +263,8 @@ class AsyncVkBot(ApiAccess):
 
     def command(
         self,
-        command: Union[str, None] = None,
-        placeholder: Union[str, None] = None,
+        command: str | None = None,
+        placeholder: str | None = None,
         keyboard: str = None,
         admin: bool = False,
     ) -> Callable:
@@ -272,10 +274,10 @@ class AsyncVkBot(ApiAccess):
         :param str keyboard: клавиатура
         :param str placeholder: сообщение, которое будет изменено
         :param bool admin: админ-команда или нет. !Привязка идёт к чатам, а не к конкретным юзерам!
-        :return: command-wrapper
+        :return: Command-wrapper
         """
 
-        def __command(__func: Callable):
+        def __command(__func: Callable[[...], Awaitable]):
             @wraps(__func)
             async def __wrapper(*args, **kwargs):
                 attach = None  # attachment (изображение)
