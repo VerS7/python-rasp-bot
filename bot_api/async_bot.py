@@ -146,7 +146,7 @@ class ApiAccess:
 
         return response["upload_url"]
 
-    async def __upload_image(self, url: str, image: bytes) -> Dict[...]:
+    async def __upload_image(self, url: str, image: bytes) -> Dict[Any]:
         """
         :param str url: url сервера для загрузки изображений
         :param bytes image: изображение в виде bytes
@@ -202,7 +202,7 @@ class AsyncVkBot(ApiAccess):
         pub_id: int,
         prefixes: str = "!#",
         admin_ids: List[int] = None,
-        services: List[...] = None,
+        services: List[Any] = None,
     ):
         """
         :param str access_token: токен доступа группы ВК
@@ -250,7 +250,7 @@ class AsyncVkBot(ApiAccess):
                         await self.run_command(json.loads(payload)["command"], peer)
 
     async def run_command(
-        self, command: str, peer_id: int, args: List[...] = None
+        self, command: str, peer_id: int, args: List[Any] = None
     ) -> None:
         """
         Создаёт async задачу по команде
@@ -277,7 +277,7 @@ class AsyncVkBot(ApiAccess):
         :return: Command-wrapper
         """
 
-        def __command(__func: Callable[[...], Awaitable]):
+        def __command(__func: Callable[[Any], Awaitable]):
             @wraps(__func)
             async def __wrapper(*args, **kwargs):
                 attach = None  # attachment (изображение)
