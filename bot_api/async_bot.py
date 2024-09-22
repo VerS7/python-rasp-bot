@@ -176,13 +176,14 @@ class ApiAccess:
         for image in images:
             response = await self.__upload_image(url, image)
 
-            if response.get("error_code", None):
+            if not response.get("photo", None):
                 logger.exception("Не удалось загрузить изображение в ВК.")
                 continue
 
             img_response = await self.vksession.send_api_request(
                 "photos.saveMessagesPhoto", response
             )
+
             attachments.append(
                 f"photo{img_response[0]['owner_id']}_{img_response[0]['id']}"
             )
