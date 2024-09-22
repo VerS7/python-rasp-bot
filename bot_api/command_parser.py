@@ -3,8 +3,7 @@
 """
 
 import string
-
-from typing import Union
+from typing import List
 
 from pyparsing import Word, Optional
 
@@ -19,9 +18,9 @@ class Command:
     Класс парсинга команды из строки
     """
 
-    def __init__(self, string_: str, prefixes: Union[str, None] = None):
+    def __init__(self, to_parse: str, prefixes: str | None = None) -> None:
         """
-        :param str string_: строка для парсинга
+        :param str to_parse: строка для парсинга
         :param str prefixes: префиксы команды. По умолчанию !#
         """
         if prefixes:
@@ -29,7 +28,7 @@ class Command:
         else:
             self.__prefix = Word("!#")
 
-        self.__string = string_
+        self.__string = to_parse
         self.__key = Word(LETTERS)
         self.__argument = Optional(Word(LETTERS + NUMBERS + "-" + LETTERS_UPPERCASE))
         self.__command = self.__prefix + self.__key + self.__argument
@@ -50,18 +49,18 @@ class Command:
 
         return False
 
-    def __get_args(self) -> Union[list, None]:
+    def __get_args(self) -> List[str] | None:
         if self.is_command() and len(self.__command_list()) > 2:
             return self.__command_list()[2::]
         return None
 
-    def __command_list(self) -> list:
+    def __command_list(self) -> List[str] | List[None]:
         try:
             return self.__command.parseString(self.__string)
         except:
             return []
 
-    def __get_command(self) -> Union[str, None]:
+    def __get_command(self) -> str | None:
         if self.is_command():
             return self.__command_list()[1]
         return None
