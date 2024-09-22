@@ -146,7 +146,7 @@ class ApiAccess:
 
         return response["upload_url"]
 
-    async def __upload_image(self, url: str, image: bytes) -> Dict[Any]:
+    async def __upload_image(self, url: str, image: bytes) -> Dict[Any, Any]:
         """
         :param str url: url сервера для загрузки изображений
         :param bytes image: изображение в виде bytes
