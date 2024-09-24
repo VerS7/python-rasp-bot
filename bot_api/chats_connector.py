@@ -4,91 +4,113 @@
 
 import json
 from os import path
-from typing import Union
-
+from typing import Dict
+from abc import ABC, abstractmethod
 
 CHATS_PATH = path.join(
     path.dirname(path.dirname(path.abspath(__file__))), "files/chats.json"
 )
 
 
-class Chats:
+class Connector(ABC):
+    @abstractmethod
+    def get_all(self) -> Dict[str, str]:
+        pass
+
+    @abstractmethod
+    def get(self, chat_id: str) -> str | None:
+        pass
+
+    @abstractmethod
+    def find(self, groupname: str) -> str | None:
+        pass
+
+    @abstractmethod
+    def add(self, chat_id: str, groupname: str) -> None:
+        pass
+
+    @abstractmethod
+    def remove(self, chat_id: str) -> str | None:
+        pass
+
+
+class JsonChatsConnector(Connector):
     """
-    Класс системы чатов
+    Класс системы чатов.
+    Чаты хранятся в json-файле
     """
 
-    def __init__(self, file_path: str = CHATS_PATH):
-        self.__path = file_path
-        self.__chats: dict = self.__load_json()
+    def __init__(self) -> None:
+        self._fp: str = CHATS_PATH
+        self._chats: Dict[str, str] = self._load()
 
-    def get_chats(self) -> dict:
-        """
-        Возвращает чаты с подключенными группами.
-        """
-        return self.__chats
+    def get_all(self) -> Dict[str, str]:
+        """Возвращает все чаты с подключенными группами"""
+        return self._chats
 
-    def add_group(self, chat_id: str, groupname: str):
+    def get(self, chat_id: str) -> str | None:
         """
-        Сохраняет значение чат: группа
-        :param str chat_id: айди чата
-        :param str groupname: имя группы
+        Возвращает группу по номеру чата
+        :param str chat_id: номер чата
         """
-        if not isinstance(chat_id, str):
-            chat_id = str(chat_id)
+        return self._chats.get(chat_id, None)
 
-        if chat_id in self.__chats.keys():
+    def find(self, groupname: str) -> str | None:
+        """
+        Возвращает чат по названию группы
+        :param str groupname: номер чата
+        """
+        for k, v in self._chats.items():
+            if v == groupname:
+                return k
+
+    def add(
+        self, chat_id: str, groupname: str, autoload: bool = True, autodump: bool = True
+    ) -> None:
+        """
+        Добавляет чат и группу в чаты
+        :param str chat_id: номер чата
+        :param str groupname: название группы
+        """
+        if autoload:
+            self._load()
+
+        self._chats[chat_id] = groupname
+
+        if autodump:
+            self._dump()
+
+    def remove(
+        self, chat_id: str, autoload: bool = True, autodump: bool = True
+    ) -> str | None:
+        """
+        Удаляет группу и чат в систему
+        :param str chat_id: номер чата
+        :param bool autodump: записать в файл автоматически
+        :param bool autoload: загрузить из файла автоматически
+        """
+        if autoload:
+            self._load()
+
+        group = self._chats.pop(chat_id, None)
+
+        if not group:
             return
 
-        self.__load_json()
-        self.__chats[chat_id] = groupname
-        self.__dump_json()
+        if autodump:
+            self._dump()
 
-    def get_group(self, chat_id: str) -> Union[str, None]:
+    def check(self, chat_id: str) -> bool:
         """
-        Возвращает подключенную группу к chat_id или None
-        :param str chat_id: id чата
-        :return: имя группы или None
+        Проверяет есть ли чат в системе
+        :param chat_id:
         """
-        if not isinstance(chat_id, str):
-            chat_id = str(chat_id)
+        return chat_id in self._chats.keys()
 
-        self.__load_json()
-
-        return self.__chats.get(chat_id, None)
-
-    def in_chats(self, chat_id: str) -> bool:
-        """
-        :param str chat_id: id чата
-        :return: True/False наличие чата в ситсеме оповещений
-        """
-        if not isinstance(chat_id, str):
-            chat_id = str(chat_id)
-
-        if chat_id in self.__chats.keys():
-            return True
-
-        return False
-
-    def remove_chat(self, chat_id: str) -> Union[str, None]:
-        """
-        Удаляет конкретный чат из сохранённых чатов
-        :param str chat_id: id чата
-        :return: удалённая группа или None в случае отсутствия
-        """
-        if not isinstance(chat_id, str):
-            raise TypeError
-
-        group = self.__chats.pop(chat_id, None)
-
-        if group is not None:
-            self.__dump_json()
-
-        return group
-
-    def __load_json(self):
-        with open(self.__path, "r", encoding="utf-8") as file:
+    def _load(self):
+        with open(self._fp, "r", encoding="utf-8") as file:
             return json.load(file)
 
-    def __dump_json(self):
-        with open(self.__path, "w", encoding="utf-8") as file:
-            return json.dump(self.__chats, file)
+    def _dump(self):
+        with open(self._fp, "w", encoding="utf-8") as file:
+            return json.dump(self._chats, file)

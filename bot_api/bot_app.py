@@ -8,7 +8,7 @@ from rasp_api.schedule import ScheduleImageGenerator
 from rasp_api.parsing import TagsParser
 
 from bot_api.async_bot import AsyncVkBot, GREETING_TEXT
-from bot_api.chats_connector import Chats
+from bot_api.chats_connector import JsonChatsConnector as Chats
 from bot_api.services import NotificatorService
 from bot_api.utility import image_to_bytes
 from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
@@ -26,21 +26,21 @@ token = getenv("VK_TOKEN")
 pub_id = int(getenv("PUBLIC_ID"))
 prefixes = "!$#%^&*"
 
-ChatSystem = Chats()  # Подключенные к оповещению чаты
-Tags = TagsParser()  # Названия групп и тэги
-ImageGenerator = ScheduleImageGenerator()  # Генератор изображений с расписанием
-Notificator = NotificatorService(
-    ChatSystem, ImageGenerator, timings=["07:00", "19:00"]
+chats = Chats()  # Подключенные к оповещению чаты
+tags = TagsParser()  # Названия групп и тэги
+image_generator = ScheduleImageGenerator()  # Генератор изображений с расписанием
+notificator = NotificatorService(
+    chats, image_generator, timings=["07:00", "19:00"]
 )  # Система оповещений
-BotApp = AsyncVkBot(
-    token, pub_id, prefixes, admin_ids=[406579945], services=[Notificator]
+app = AsyncVkBot(
+    token, pub_id, prefixes, admin_ids=[406579945], services=[notificator]
 )  # Бот
 basic_keyboard = get_keyboard_string(
     BASIC_KEYBOARD
 )  # Стандартная Not-Inline клавиатура
 
 
-@BotApp.command(command="инфо", keyboard=basic_keyboard)
+@app.command(command="инфо", keyboard=basic_keyboard)
 async def send_info(peer, args):
     """
     Вовращает стандартную информацию из info.txt
@@ -50,7 +50,7 @@ async def send_info(peer, args):
     return peer, GREETING_TEXT
 
 
-@BotApp.command(
+@app.command(
     command="расп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
 )
 async def send_daily(peer, args):
@@ -60,28 +60,28 @@ async def send_daily(peer, args):
     :param args: аргументы, переданные при вызове команды через чат
     """
     if args is None:
-        if ChatSystem.in_chats(peer):
-            groupname = ChatSystem.get_group(peer)
+        if chats.check(str(peer)):
+            groupname = chats.get(str(peer))
             return (
                 peer,
                 f"Ежедневное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_daily(groupname)),
+                image_to_bytes(await image_generator.create_daily(groupname)),
             )
         return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
-        group = await Tags.validate(args[0])
+        group = await tags.validate(args[0])
         if group:
             groupname = group[0]
             return (
                 peer,
                 f"Ежедневное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_daily(groupname)),
+                image_to_bytes(await image_generator.create_daily(groupname)),
             )
     return peer, "Неверный или отсутствует номер группы."
 
 
-@BotApp.command(
+@app.command(
     command="нрасп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
 )
 async def send_weekly(peer, args):
@@ -91,28 +91,28 @@ async def send_weekly(peer, args):
     :param args: аргументы, переданные при вызове команды через чат
     """
     if args is None:
-        if ChatSystem.in_chats(peer):
-            groupname = ChatSystem.get_group(peer)
+        if chats.check(str(peer)):
+            groupname = chats.get(str(peer))
             return (
                 peer,
                 f"Недельное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_week(groupname)),
+                image_to_bytes(await image_generator.create_week(groupname)),
             )
         return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
-        group = await Tags.validate(args[0])
+        group = await tags.validate(args[0])
         if group:
             groupname = group[0]
             return (
                 peer,
                 f"Недельное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_week(groupname)),
+                image_to_bytes(await image_generator.create_week(groupname)),
             )
     return peer, "Неверный или отсутствует номер группы."
 
 
-@BotApp.command(
+@app.command(
     command="орасп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
 )
 async def send_main(peer, args):
@@ -122,72 +122,72 @@ async def send_main(peer, args):
     :param args: аргументы, переданные при вызове команды через чат
     """
     if args is None:
-        if ChatSystem.in_chats(peer):
-            groupname = ChatSystem.get_group(peer)
+        if chats.check(str(peer)):
+            groupname = chats.get(str(peer))
             return (
                 peer,
                 f"Основное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_main(groupname)),
+                image_to_bytes(await image_generator.create_main(groupname)),
             )
         return peer, "К данному диалогу не подключён номер группы."
 
     if args is not None:
-        group = await Tags.validate(args[0])
+        group = await tags.validate(args[0])
 
         if group:
             groupname = group[0]
             return (
                 peer,
                 f"Основное расписание для группы {groupname}.",
-                image_to_bytes(await ImageGenerator.create_main(groupname)),
+                image_to_bytes(await image_generator.create_main(groupname)),
             )
     return peer, "Неверный или отсутствует номер группы."
 
 
-@BotApp.command(command="группы", keyboard=basic_keyboard)
+@app.command(command="группы", keyboard=basic_keyboard)
 async def send_groups(peer, args):
     """
     Возвращает в чат все доступные к вызову номера групп
     :param peer: id чата
     :param args: аргументы, переданные при вызове команды через чат
     """
-    groups = "\n".join(await Tags.parse_tags())
+    groups = "\n".join(await tags.parse_tags())
     return peer, f"Доступные группы: \n{groups}."
 
 
-@BotApp.command(command="подключить")
+@app.command(command="подключить")
 async def notify_connect(peer, args):
     """
     Подключает конкретный чат к номеру группы.
     :param peer: id чата
     :param args: аргументы, переданные при вызове команды через чат
     """
-    if ChatSystem.in_chats(peer):
+    if chats.check(str(peer)):
         return (
             peer,
-            f"Данный чат уже подключён с номером группы: {ChatSystem.get_group(peer)}",
+            f"Данный чат уже подключён с номером группы: {chats.get(peer)}",
         )
 
     if args is None:
         return peer, "Отсутствует номер группы."
 
-    validated = await Tags.validate(args[0])
+    validated = await tags.validate(args[0])
     if validated:
         group = validated[0]
-        ChatSystem.add_group(peer, group)
+        chats.add(peer, group)
         return peer, f"К чату с ID {peer} подключена группа {group}"
 
     return peer, "Неправильный номер группы."
 
 
-@BotApp.command(command="отключить")
+@app.command(command="отключить")
 async def notify_disconnect(peer, args):
     """
     Отключает чат от номера группы. Вызывается без аргументов
     :param peer: id чата
     :param args: аргументы, переданные при вызове команды через чат
     """
-    group = ChatSystem.remove_chat(peer)
+    group = chats.remove(str(peer))
 
     if group is not None:
         return peer, f"Данный чат отключён от группы: {group}"
@@ -195,7 +195,7 @@ async def notify_disconnect(peer, args):
     return peer, "Данный чат не подключён к системе оповещений."
 
 
-@BotApp.command(command="admin", admin=True)
+@app.command(command="admin", admin=True)
 async def admin_manage(peer, args):
     """
     Debug админ система
@@ -216,7 +216,7 @@ async def admin_manage(peer, args):
 
         case "allchats":
             return peer, "\n".join(
-                [f"{chat[1]} : {chat[0]}" for chat in ChatSystem.get_chats().items()]
+                [f"{chat[1]} : {chat[0]}" for chat in chats.get_all().items()]
             )
 
         case _:

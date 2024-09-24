@@ -370,7 +370,6 @@ class AsyncVkBot(ApiAccess):
                 return
 
             except Exception as e:
-                logger.error(e)
                 logger.info(f"Ожидание: {EXC_DELAY}s.")
                 self.connect(self._access, self._pubid)
                 sleep(EXC_DELAY)

@@ -9,7 +9,7 @@ from typing import Callable, List, Any, Tuple, Awaitable
 
 from loguru import logger
 
-from bot_api.chats_connector import Chats
+from bot_api.chats_connector import JsonChatsConnector as Chats
 from bot_api.utility import image_to_bytes
 from bot_api.async_bot import ApiAccess
 from rasp_api.schedule import ScheduleImageGenerator
@@ -87,7 +87,7 @@ class NotificatorService(AbstractBotService):
                 scheduler = AsyncTaskScheduler()
                 logger.info(f"Оповещение по времени: {current_time} запущено.")
 
-                for chat_peer, group_id in self._chats.get_chats().items():
+                for chat_peer, group_id in self._chats.get_all().items():
                     scheduler.add(
                         self._send_notice,
                         chat_peer,
