@@ -279,6 +279,18 @@ async def send_daily(ctx: Context):
                 vk_keyboard=basic_keyboard,
             )
 
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=ctx.peer,
+            message_id=msg_id,
+            message="Некорректный номер группы.",
+        )
+    else:
+        await app.send_message(
+            peer_id=ctx.peer,
+            message="Некорректный номер группы.",
+        )
+
 
 @app.command(command="нрасп")
 async def send_weekly(ctx: Context):
@@ -326,6 +338,18 @@ async def send_weekly(ctx: Context):
                 attachment=images,
             )
 
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=ctx.peer,
+            message_id=msg_id,
+            message="Некорректный номер группы.",
+        )
+    else:
+        await app.send_message(
+            peer_id=ctx.peer,
+            message="Некорректный номер группы.",
+        )
+
 
 @app.command(command="орасп")
 async def send_main(ctx: Context):
@@ -372,6 +396,18 @@ async def send_main(ctx: Context):
                 message=f"Недельное расписание для группы {groupname}.",
                 attachment=images,
             )
+
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=ctx.peer,
+            message_id=msg_id,
+            message="Некорректный номер группы.",
+        )
+    else:
+        await app.send_message(
+            peer_id=ctx.peer,
+            message="Некорректный номер группы.",
+        )
 
 
 @app.command(command="группы")
