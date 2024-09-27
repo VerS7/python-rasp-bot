@@ -246,7 +246,8 @@ async def send_daily(ctx: Context):
 
     # валидация названия группы если вызов был с аргументами
     if ctx.args:
-        groupname = await tags.validate(ctx.args[0])
+        validated = await tags.validate(ctx.args[0])
+        groupname = validated[0] if validated else None
     else:
         if chats.check(str(ctx.peer)):
             groupname = chats.get(str(ctx.peer))
@@ -293,7 +294,8 @@ async def send_weekly(ctx: Context):
 
     # валидация названия группы если вызов был с аргументами
     if ctx.args:
-        groupname = await tags.validate(ctx.args[0])
+        validated = await tags.validate(ctx.args[0])
+        groupname = validated[0] if validated else None
     else:
         if chats.check(str(ctx.peer)):
             groupname = chats.get(str(ctx.peer))
@@ -339,7 +341,8 @@ async def send_main(ctx: Context):
 
     # валидация названия группы если вызов был с аргументами
     if ctx.args:
-        groupname = await tags.validate(ctx.args[0])
+        validated = await tags.validate(ctx.args[0])
+        groupname = validated[0] if validated else None
     else:
         if chats.check(str(ctx.peer)):
             groupname = chats.get(str(ctx.peer))
