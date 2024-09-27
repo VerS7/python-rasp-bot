@@ -18,10 +18,10 @@ from aiohttp import ClientSession, ClientTimeout, TCPConnector, FormData
 
 from loguru import logger
 
-from bot_api.command_parser import Command
-from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD
-
+from bot_api.context import Context
+from bot_api.command_parser import parse_command
 from bot_api.utility import load_txt
+
 
 GREETING_FILE = path.join(
     path.dirname(path.dirname(path.abspath(__file__))), "files/info.txt"
@@ -74,7 +74,7 @@ class ApiAccess:
 
     async def send_message(
         self,
-        peer_id: str,
+        peer_id: int,
         message: str,
         attachment: List[str] | str | None = None,
         vk_keyboard: str = None,
@@ -105,7 +105,7 @@ class ApiAccess:
 
     async def edit_message(
         self,
-        peer_id: str,
+        peer_id: int,
         message: str,
         message_id: int,
         attachment: List[str] | str | None = None,
@@ -216,9 +216,12 @@ class AsyncVkBot(ApiAccess):
         self.admins = admin_ids
         self.services = services
         self.prefixes = prefixes
-        self.commands = (
+        self.commands: Dict[str, Callable] = (
             {}
         )  # словарь {команда: функция} для вызовов из цикла обработки сообщений
+        self.events: Dict[str, Callable] = (
+            {}
+        )  # словарь {тип ивента: функция} для вызовов из цикла обработки сообщений
 
     async def __commands_worker(self) -> None:
         """
@@ -226,7 +229,6 @@ class AsyncVkBot(ApiAccess):
         """
         async for event in self.longpoll.iter():
             if event["type"] == "message_new":
-
                 peer = event["object"]["message"][
                     "peer_id"
                 ]  # peer_id диалога с новым сообщением
@@ -235,114 +237,78 @@ class AsyncVkBot(ApiAccess):
                     "payload", None
                 )  # Payload сообщения
 
-                command = Command(message, self.prefixes)  # обработка сообщения
-                if command.is_command() and command.command in self.commands:
-                    await self.run_command(command.command, peer, command.args)
+                command, args = parse_command(message, self.prefixes)
+
+                if command and command in self.commands:
+                    await self._handle_command(command, Context(peer, args))
 
                 if payload:
-                    if json.loads(payload)["command"] == "start":
-                        await self.send_message(
-                            peer,
-                            message=GREETING_TEXT,
-                            vk_keyboard=get_keyboard_string(BASIC_KEYBOARD),
-                        )
-                    else:
-                        await self.run_command(json.loads(payload)["command"], peer)
+                    await self._handle_payload(payload, peer)
 
-    async def run_command(
-        self, command: str, peer_id: int, args: List[Any] = None
-    ) -> None:
+    async def _handle_command(self, command: str, context: Context) -> None:
         """
-        Создаёт async задачу по команде
-        :param str command: команда, по которой будет выполнена функция из пула команд.
-        :param int peer_id:
-        :param list args: Аргументы команды или None
+        Handle command
         """
-        logger.info(f"Вызвана команда: <{command}>({args}). PeerID: {peer_id}")
-        await self._loop.create_task(self.commands[command](peer_id, args))
+        if command not in self.commands:
+            return
+
+        logger.info(f"Вызвана команда: <{command}>. PeerID: {context.peer}")
+        await self._loop.create_task(self.commands[command](context))
+
+    async def _handle_payload(self, payload: str, peer_id: int) -> None:
+        """
+        Handle payload
+        """
+        command = json.loads(payload)["command"]
+        if command not in self.events:
+            return
+
+        logger.info(f"Запущен ивент: <{command}>. PeerID: {peer_id}")
+        await self._loop.create_task(self.events[command](peer_id))
+
+    def on_payload(self, payload_type: str) -> Callable:
+        """
+        Декоратор для объявления ивента в payload-handler
+        :param str payload_type: тип ивента
+        """
+
+        def _on_payload(func: Callable[[Any], Awaitable]):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                await func(*args, **kwargs)
+
+            self.events[payload_type] = wrapper  # Отправка ивента в пул ивентов
+
+            return wrapper
+
+        return _on_payload
 
     def command(
         self,
-        command: str | None = None,
-        placeholder: str | None = None,
-        keyboard: str = None,
+        command: str,
         admin: bool = False,
     ) -> Callable:
         """
         Декоратор для объявления команды и ответа на неё
-        :param str command: команда, которую слушает event listener
-        :param str keyboard: клавиатура
-        :param str placeholder: сообщение, которое будет изменено
+        :param str command: название команды
         :param bool admin: админ-команда или нет. !Привязка идёт к чатам, а не к конкретным юзерам!
-        :return: Command-wrapper
         """
 
-        def __command(__func: Callable[[Any], Awaitable]):
-            @wraps(__func)
-            async def __wrapper(*args, **kwargs):
-                attach = None  # attachment (изображение)
-                message_id = 0  # Базовый message id
-                peer = args[0]  # peer id, возвращаемый командой
-                keyboard_ = None  # ВК клавиатура
-
-                if str(peer)[0] != 2:
-                    keyboard_ = keyboard
-
-                logger.info(
-                    f"Вызвана функция: {__func.__name__}({args[1::]}). PeerID: {peer}"
-                )
-
-                if (
-                    admin and not args[0] in self.admins
-                ):  # Если админ-команда не от админа
-                    return None
-
-                if placeholder:  # Если есть placeholder
-                    message_id = await self.send_message(
-                        peer_id=peer, message=placeholder, vk_keyboard=keyboard_
+        def _command(func: Callable[[Any], Awaitable]):
+            @wraps(func)
+            async def wrapper(*args, **kwargs):
+                if admin and not args[0].peer in self.admins:
+                    logger.exception(
+                        f"Вызов админ-команды вне админ-чата. Peer: {args[0].peer}"
                     )
+                    return
+                await func(*args, **kwargs)
 
-                result = await __func(*args, **kwargs)
+            self.commands[command] = wrapper  # Отправка команды в пул доступных команд
 
-                if placeholder and message_id != 0:
-                    if len(result) == 3:
-                        attach = await self.image_attachments(peer, result[2])
-                        if not attach:
-                            return await self.edit_message(
-                                peer_id=peer,
-                                message="Не удалось загрузить расписание. Попробуйте ещё раз.",
-                                message_id=message_id,
-                            )
+            return wrapper
 
-                    return await self.edit_message(
-                        peer_id=peer,
-                        message=result[1],
-                        message_id=message_id,
-                        attachment=attach,
-                    )
-
-                if placeholder and message_id == 0:
-                    logger.info(
-                        f"MessageID для замены сообщения: {message_id}. Невозможно заменить сообщение."
-                    )
-
-                if len(result) == 3:
-                    attach = await self.image_attachments(peer, result[2])
-
-                return await self.send_message(
-                    peer_id=peer,
-                    message=result[1],
-                    attachment=attach,
-                    vk_keyboard=keyboard_,
-                )
-
-            self.commands[command] = (
-                __wrapper  # Отправка команды в пул доступных команд
-            )
-
-            return __wrapper
-
-        return __command
+        return _command
 
     def run(self):
         """
@@ -370,6 +336,7 @@ class AsyncVkBot(ApiAccess):
                 return
 
             except Exception as e:
+                logger.error(e)
                 logger.info(f"Ожидание: {EXC_DELAY}s.")
                 self.connect(self._access, self._pubid)
                 sleep(EXC_DELAY)

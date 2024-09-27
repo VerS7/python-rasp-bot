@@ -4,10 +4,12 @@
 
 from os import getenv, path
 
+from loguru import logger
+
 from rasp_api.schedule import ScheduleImageGenerator
 from rasp_api.parsing import TagsParser
 
-from bot_api.async_bot import AsyncVkBot, GREETING_TEXT
+from bot_api.async_bot import AsyncVkBot, Context, GREETING_TEXT
 from bot_api.chats_connector import JsonChatsConnector as Chats
 from bot_api.services import NotificatorService
 from bot_api.utility import image_to_bytes
@@ -40,184 +42,439 @@ basic_keyboard = get_keyboard_string(
 )  # Стандартная Not-Inline клавиатура
 
 
-@app.command(command="инфо", keyboard=basic_keyboard)
-async def send_info(peer, args):
-    """
-    Вовращает стандартную информацию из info.txt
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
-    """
-    return peer, GREETING_TEXT
+@app.on_payload("инфо")
+async def send_info_event(peer: int):
+    """Отправляет стандартную информацию по кнопке"""
+    await app.send_message(
+        peer_id=peer, message=GREETING_TEXT, vk_keyboard=basic_keyboard
+    )
 
 
-@app.command(
-    command="расп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
-)
-async def send_daily(peer, args):
-    """
-    Вовращает ежедневное расписание по номеру группы или подключенному к чату номеру.
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
-    """
-    if args is None:
-        if chats.check(str(peer)):
-            groupname = chats.get(str(peer))
-            return (
-                peer,
-                f"Ежедневное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_daily(groupname)),
+@app.on_payload("расп")
+async def send_daily_event(peer: int):
+    """Отправляет дневное расписание по кнопке"""
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    if chats.check(str(peer)):
+        groupname = chats.get(str(peer))
+
+    if groupname:
+        image = await app.image_attachments(
+            peer_id=peer,
+            images=image_to_bytes(await image_generator.create_daily(groupname)),
+        )
+        if len(image) == 0:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+                vk_keyboard=basic_keyboard,
             )
-        return peer, "К данному диалогу не подключён номер группы."
 
-    if args is not None:
-        group = await tags.validate(args[0])
-        if group:
-            groupname = group[0]
-            return (
-                peer,
-                f"Ежедневное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_daily(groupname)),
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=peer,
+                message_id=msg_id,
+                message=f"Ежедневное расписание для группы {groupname}.",
+                attachment=image,
             )
-    return peer, "Неверный или отсутствует номер группы."
-
-
-@app.command(
-    command="нрасп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
-)
-async def send_weekly(peer, args):
-    """
-    Вовращает ежеднедельное расписание по номеру группы или подключенному к чату номеру.
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
-    """
-    if args is None:
-        if chats.check(str(peer)):
-            groupname = chats.get(str(peer))
-            return (
-                peer,
-                f"Недельное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_week(groupname)),
+        else:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Ежедневное расписание для группы {groupname}.",
+                attachment=image,
+                vk_keyboard=basic_keyboard,
             )
-        return peer, "К данному диалогу не подключён номер группы."
+        return
 
-    if args is not None:
-        group = await tags.validate(args[0])
-        if group:
-            groupname = group[0]
-            return (
-                peer,
-                f"Недельное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_week(groupname)),
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=peer,
+            message_id=msg_id,
+            message="К данному чату не привязана группа.",
+        )
+    else:
+        await app.send_message(
+            peer_id=peer,
+            message="К данному чату не привязана группа.",
+            vk_keyboard=basic_keyboard,
+        )
+
+
+@app.on_payload("нрасп")
+async def send_weekly_payload(peer: int):
+    """Отправляет недельное расписание по кнопке"""
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    if chats.check(str(peer)):
+        groupname = chats.get(str(peer))
+
+    if groupname:
+        images = await app.image_attachments(
+            peer_id=peer,
+            images=image_to_bytes(await image_generator.create_week(groupname)),
+        )
+        if len(images) == 0:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+                vk_keyboard=basic_keyboard,
             )
-    return peer, "Неверный или отсутствует номер группы."
 
-
-@app.command(
-    command="орасп", placeholder="Подождите, идёт обработка...", keyboard=basic_keyboard
-)
-async def send_main(peer, args):
-    """
-    Вовращает основное расписание по номеру группы или подключенному к чату номеру.
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
-    """
-    if args is None:
-        if chats.check(str(peer)):
-            groupname = chats.get(str(peer))
-            return (
-                peer,
-                f"Основное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_main(groupname)),
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=peer,
+                message_id=msg_id,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
             )
-        return peer, "К данному диалогу не подключён номер группы."
-
-    if args is not None:
-        group = await tags.validate(args[0])
-
-        if group:
-            groupname = group[0]
-            return (
-                peer,
-                f"Основное расписание для группы {groupname}.",
-                image_to_bytes(await image_generator.create_main(groupname)),
+        else:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
+                vk_keyboard=basic_keyboard,
             )
-    return peer, "Неверный или отсутствует номер группы."
+        return
+
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=peer,
+            message_id=msg_id,
+            message="К данному чату не привязана группа.",
+        )
+    else:
+        await app.send_message(
+            peer_id=peer,
+            message="К данному чату не привязана группа.",
+            vk_keyboard=basic_keyboard,
+        )
 
 
-@app.command(command="группы", keyboard=basic_keyboard)
-async def send_groups(peer, args):
+@app.on_payload("орасп")
+async def send_main_payload(peer: int):
+    """Отправляет основное расписание по кнопке"""
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    if chats.check(str(peer)):
+        groupname = chats.get(str(peer))
+
+    if groupname:
+        images = await app.image_attachments(
+            peer_id=peer,
+            images=image_to_bytes(await image_generator.create_main(groupname)),
+        )
+        if len(images) == 0:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+                vk_keyboard=basic_keyboard,
+            )
+
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=peer,
+                message_id=msg_id,
+                message=f"Основное расписание для группы {groupname}.",
+                attachment=images,
+            )
+        else:
+            await app.send_message(
+                peer_id=peer,
+                message=f"Основное расписание для группы {groupname}.",
+                attachment=images,
+                vk_keyboard=basic_keyboard,
+            )
+        return
+
+    if msg_id != 0:
+        await app.edit_message(
+            peer_id=peer,
+            message_id=msg_id,
+            message="К данному чату не привязана группа.",
+        )
+    else:
+        await app.send_message(
+            peer_id=peer,
+            message="К данному чату не привязана группа.",
+            vk_keyboard=basic_keyboard,
+        )
+
+
+@app.on_payload("группы")
+async def send_groups_payload(peer: int):
+    """Отправляет группы по кнопке"""
+    groups = "\n".join(await tags.parse_tags())
+    await app.send_message(peer_id=peer, message=groups, vk_keyboard=basic_keyboard)
+
+
+@app.command(command="инфо")
+async def send_info(ctx: Context):
     """
-    Возвращает в чат все доступные к вызову номера групп
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
+    Отправляет стандартную информацию из info.txt
+    """
+    await app.send_message(
+        peer_id=ctx.peer, message=GREETING_TEXT, vk_keyboard=basic_keyboard
+    )
+
+
+@app.command(command="расп")
+async def send_daily(ctx: Context):
+    """
+    Отправляет ежедневное расписание по номеру группы или подключенному к чату номеру.
+    """
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=ctx.peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    # валидация названия группы если вызов был с аргументами
+    if ctx.args:
+        groupname = await tags.validate(ctx.args[0])
+    else:
+        if chats.check(str(ctx.peer)):
+            groupname = chats.get(str(ctx.peer))
+
+    if groupname:
+        image = await app.image_attachments(
+            peer_id=ctx.peer,
+            images=image_to_bytes(await image_generator.create_daily(groupname)),
+        )
+        if len(image) == 0:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+                vk_keyboard=basic_keyboard,
+            )
+
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=ctx.peer,
+                message_id=msg_id,
+                message=f"Ежедневное расписание для группы {groupname}.",
+                attachment=image,
+            )
+        else:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Ежедневное расписание для группы {groupname}.",
+                attachment=image,
+                vk_keyboard=basic_keyboard,
+            )
+
+
+@app.command(command="нрасп")
+async def send_weekly(ctx: Context):
+    """
+    Отправляет недельное расписание по номеру группы или подключенному к чату номеру.
+    """
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=ctx.peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    # валидация названия группы если вызов был с аргументами
+    if ctx.args:
+        groupname = await tags.validate(ctx.args[0])
+    else:
+        if chats.check(str(ctx.peer)):
+            groupname = chats.get(str(ctx.peer))
+
+    if groupname:
+        images = await app.image_attachments(
+            peer_id=ctx.peer,
+            images=image_to_bytes(await image_generator.create_week(groupname))[:10],
+        )
+
+        if len(images) == 0:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+            )
+
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=ctx.peer,
+                message_id=msg_id,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
+            )
+        else:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
+            )
+
+
+@app.command(command="орасп")
+async def send_main(ctx: Context):
+    """
+    Отправляет основное расписание по номеру группы или подключенному к чату номеру.
+    """
+    groupname = None
+    msg_id = await app.send_message(
+        peer_id=ctx.peer,
+        message="Подождите, идёт обработка...",
+        vk_keyboard=basic_keyboard,
+    )  # айди сообщения для изменения
+
+    # валидация названия группы если вызов был с аргументами
+    if ctx.args:
+        groupname = await tags.validate(ctx.args[0])
+    else:
+        if chats.check(str(ctx.peer)):
+            groupname = chats.get(str(ctx.peer))
+
+    if groupname:
+        images = await app.image_attachments(
+            peer_id=ctx.peer,
+            images=image_to_bytes(await image_generator.create_main(groupname))[:10],
+        )
+
+        if len(images) == 0:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Не удалось загрузить расписание. Попробуйте снова.",
+            )
+
+        if msg_id != 0:
+            await app.edit_message(
+                peer_id=ctx.peer,
+                message_id=msg_id,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
+            )
+        else:
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Недельное расписание для группы {groupname}.",
+                attachment=images,
+            )
+
+
+@app.command(command="группы")
+async def send_groups(ctx: Context):
+    """
+    Отправляет все доступные к вызову номера групп
     """
     groups = "\n".join(await tags.parse_tags())
-    return peer, f"Доступные группы: \n{groups}."
+    await app.send_message(peer_id=ctx.peer, message=groups, vk_keyboard=basic_keyboard)
 
 
 @app.command(command="подключить")
-async def notify_connect(peer, args):
+async def notify_connect(ctx: Context):
     """
-    Подключает конкретный чат к номеру группы.
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
+    Подключает текущий чат к номеру группы.
     """
-    if chats.check(str(peer)):
-        return (
-            peer,
-            f"Данный чат уже подключён с номером группы: {chats.get(peer)}",
+    if chats.check(str(ctx.peer)):
+        await app.send_message(
+            peer_id=ctx.peer,
+            message=f"Данный чат уже подключён с номером группы: {chats.get(str(ctx.peer))}",
+            vk_keyboard=basic_keyboard,
         )
+        return
 
-    if args is None:
-        return peer, "Отсутствует номер группы."
+    if ctx.args is None:
+        await app.send_message(
+            peer_id=ctx.peer,
+            message=f"Отсутствует номер группы.",
+            vk_keyboard=basic_keyboard,
+        )
+        return
 
-    validated = await tags.validate(args[0])
+    validated = await tags.validate(ctx.args[0])
     if validated:
         group = validated[0]
-        chats.add(peer, group)
-        return peer, f"К чату с ID {peer} подключена группа {group}"
+        chats.add(str(ctx.peer), group)
+        await app.send_message(
+            peer_id=ctx.peer,
+            message=f"К чату с ID {ctx.peer} подключена группа {group}",
+            vk_keyboard=basic_keyboard,
+        )
+        logger.info(
+            f"Подключен чат: {ctx.peer} к системе оповещений с группой: {group}"
+        )
+        return
 
-    return peer, "Неправильный номер группы."
+    await app.send_message(
+        peer_id=ctx.peer,
+        message="Неправильный номер группы.",
+        vk_keyboard=basic_keyboard,
+    )
 
 
 @app.command(command="отключить")
-async def notify_disconnect(peer, args):
+async def notify_disconnect(ctx: Context):
     """
     Отключает чат от номера группы. Вызывается без аргументов
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
     """
-    group = chats.remove(str(peer))
+    group = chats.remove(str(ctx.peer))
 
     if group is not None:
-        return peer, f"Данный чат отключён от группы: {group}"
+        await app.send_message(
+            peer_id=ctx.peer,
+            message=f"Данный чат отключён от группы: {group}",
+            vk_keyboard=basic_keyboard,
+        )
+        logger.info(f"Чат: {ctx.peer} отключен от системы оповещений. Группа: {group}")
+        return
 
-    return peer, "Данный чат не подключён к системе оповещений."
+    await app.send_message(
+        peer_id=ctx.peer,
+        message="Данный чат не подключен к системе оповещений.",
+        vk_keyboard=basic_keyboard,
+    )
 
 
 @app.command(command="admin", admin=True)
-async def admin_manage(peer, args):
+async def admin_manage(ctx: Context):
     """
-    Debug админ система
-    :param peer: id чата
-    :param args: аргументы, переданные при вызове команды через чат
+    Debug админ-система
     """
-    if args is None:
-        return (
-            peer,
-            "admin <command>\n"
-            "mypeer: peer_id чата\n"
+    if ctx.args is None:
+        await app.send_message(
+            peer_id=ctx.peer,
+            message="admin <subcommand>\n"
+            "mypeer: peer id текущего чата\n"
             "allchats: все привязанные чаты",
         )
+        return
 
-    match args[0]:
+    match ctx.args[0]:
         case "mypeer":
-            return peer, f"Peer ID: {peer}"
+            await app.send_message(
+                peer_id=ctx.peer,
+                message=f"Peer ID: {ctx.peer}",
+            )
 
         case "allchats":
-            return peer, "\n".join(
-                [f"{chat[1]} : {chat[0]}" for chat in chats.get_all().items()]
+            await app.send_message(
+                peer_id=ctx.peer,
+                message="\n".join(
+                    [f"{chat[1]} : {chat[0]}" for chat in chats.get_all().items()]
+                ),
             )
 
         case _:
-            return peer, "Данная команда не определена."
+            await app.send_message(
+                peer_id=ctx.peer, message="Данная команда не определена."
+            )

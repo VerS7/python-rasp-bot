@@ -3,7 +3,7 @@
 """
 
 import string
-from typing import List
+from typing import List, Tuple
 
 from pyparsing import Word, Optional
 
@@ -13,9 +13,19 @@ LETTERS_UPPERCASE = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫ�
 NUMBERS = "0123456789"
 
 
-class Command:
+def parse_command(msg: str, prefixes: str) -> Tuple[str | None, List[str] | None]:
     """
-    Класс парсинга команды из строки
+    Парсинг команды из сообщения
+    :param str msg: сообщение
+    :param str prefixes: префиксы команды
+    """
+    parser = __Parser(msg, prefixes)
+    return parser.command, parser.args
+
+
+class __Parser:
+    """
+    Класс парсинга строки сообщения
     """
 
     def __init__(self, to_parse: str, prefixes: str | None = None) -> None:
