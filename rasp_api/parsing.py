@@ -74,7 +74,7 @@ class Parser:
         :param BeautifulSoup soup: распарсеный HTML
         """
         match = re.search(
-            r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", self.get_update(soup)
+            r"(\d{2}\.\d{2}\.\d{4})\sв\s(\d{2}:\d{2})", Parser.get_update(self, soup)
         )
         if match:
             return match.group(1), match.group(2)
