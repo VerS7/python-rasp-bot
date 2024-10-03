@@ -278,6 +278,7 @@ async def send_daily(ctx: Context):
                 attachment=image,
                 vk_keyboard=basic_keyboard,
             )
+        return
 
     if msg_id != 0:
         await app.edit_message(
@@ -337,6 +338,7 @@ async def send_weekly(ctx: Context):
                 message=f"Недельное расписание для группы {groupname}.",
                 attachment=images,
             )
+        return
 
     if msg_id != 0:
         await app.edit_message(
@@ -396,6 +398,7 @@ async def send_main(ctx: Context):
                 message=f"Недельное расписание для группы {groupname}.",
                 attachment=images,
             )
+        return
 
     if msg_id != 0:
         await app.edit_message(
