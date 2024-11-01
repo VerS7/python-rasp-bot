@@ -81,6 +81,9 @@ class NotificatorService(AbstractBotService):
         self.running = True
 
         while True:
+            if not self.running:
+                logger.info(f"Сервис {self.__name__} остановлен.")
+
             current_time = datetime.now().strftime("%H:%M")
 
             if current_time in self._timings:
@@ -109,7 +112,7 @@ class NotificatorService(AbstractBotService):
         logger.info(f"Оповещение для группы: {group_id}. PeerID: {chat_peer}")
 
         await bot.send_message(
-            chat_peer,
+            int(chat_peer),
             f"{current_time} | Оповещение расписания для группы {group_id}",
             image,
         )

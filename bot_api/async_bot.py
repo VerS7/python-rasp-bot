@@ -222,6 +222,7 @@ class AsyncVkBot(ApiAccess):
         self.events: Dict[str, Callable] = (
             {}
         )  # словарь {тип ивента: функция} для вызовов из цикла обработки сообщений
+        self._task_services = []
 
     async def __commands_worker(self) -> None:
         """
@@ -319,7 +320,7 @@ class AsyncVkBot(ApiAccess):
 
         while True:
             try:
-                services = [
+                self._task_services = [
                     self._loop.create_task(s.run(self))
                     for s in self.services
                     if not s.running
@@ -327,7 +328,8 @@ class AsyncVkBot(ApiAccess):
 
                 self._loop.run_until_complete(
                     asyncio.gather(
-                        self._loop.create_task(self.__commands_worker()), *services
+                        self._loop.create_task(self.__commands_worker()),
+                        *self._task_services,
                     )
                 )
 
@@ -337,6 +339,13 @@ class AsyncVkBot(ApiAccess):
 
             except Exception as e:
                 logger.error(e)
+                # Остановка сервисов
+                for task_service in self._task_services:
+                    logger.info(f"Остановка сервиса: {task_service}")
+                    task_service.cancel()
+                for service in self.services:
+                    service.running = False
+
                 logger.info(f"Ожидание: {EXC_DELAY}s.")
                 self.connect(self._access, self._pubid)
                 sleep(EXC_DELAY)
