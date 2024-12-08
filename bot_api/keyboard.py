@@ -60,6 +60,36 @@ BASIC_KEYBOARD = {
 }
 
 
+EMPTY_KEYBOARD = {"buttons": [], "one_time": True}
+
+
+__INLINE_COMMAND_KEYBOARD = {
+    "inline": True,
+    "buttons": [
+        [
+            {
+                "action": {
+                    "type": "text",
+                    "label": "Да",
+                    "payload": {"command": "#"},
+                },
+                "color": "positive",
+            }
+        ],
+        [
+            {
+                "action": {
+                    "type": "text",
+                    "label": "Нет",
+                    "payload": {"command": "$"},
+                },
+                "color": "negative",
+            }
+        ],
+    ],
+}
+
+
 def get_keyboard_string(keyboard: dict) -> str:
     """
     :param dict keyboard: VK Keyboard в виде dict.
