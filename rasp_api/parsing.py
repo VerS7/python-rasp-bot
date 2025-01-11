@@ -13,11 +13,11 @@ from aiohttp.web import HTTPException
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-URL_DAILY = "http://dmitrov-dubna.ru/shedule/hg.htm"
-URL_WEEKLY = "http://dmitrov-dubna.ru/shedule/cg.htm"
-URL_MAINLY = "http://dmitrov-dubna.ru/shedule/bg.htm"
-URL_RESULTS = "http://dmitrov-dubna.ru/shedule/vg.htm"
-URL_TEACHER = "http://dmitrov-dubna.ru/shedule/vp.htm"
+URL_DAILY = "https://dmitrov.politeh-mo.ru/rasp/hg.htm"
+URL_WEEKLY = "https://dmitrov.politeh-mo.ru/rasp/cg.htm"
+URL_MAINLY = "https://dmitrov.politeh-mo.ru/rasp/bg.htm"
+URL_RESULTS = "https://dmitrov.politeh-mo.ru/rasp/vg.htm"
+URL_TEACHER = "https://dmitrov.politeh-mo.ru/rasp/vp.htm"
 
 PARSER = "html.parser"
 
