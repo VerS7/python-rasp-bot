@@ -1,5 +1,10 @@
 *.log
+.dockerignore
+.gitignore
+.git
+files/.env
 example.png
 Makefile
 README.md
-tests/
+tests
+files
