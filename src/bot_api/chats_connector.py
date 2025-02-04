@@ -8,7 +8,7 @@ from typing import Dict
 from abc import ABC, abstractmethod
 
 CHATS_PATH = path.join(
-    path.dirname(path.dirname(path.abspath(__file__))), "files/chats.json"
+    path.dirname(path.dirname(path.abspath(__file__))), "../assets/chats.json"
 )
 
 

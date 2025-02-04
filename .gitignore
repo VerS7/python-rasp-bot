@@ -1,5 +1,7 @@
 .gitignore
 .idea/
-/files/chats.json
-/files/.env
+/assets/chats.json
+/assets/.env
 .venv/
+**/*.pyc
+**/*.log

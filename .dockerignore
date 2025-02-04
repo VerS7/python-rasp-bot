@@ -2,9 +2,8 @@
 .dockerignore
 .gitignore
 .git
-files/.env
-example.png
-Makefile
+assets/.env
 README.md
+Dockerfile
+docs
 tests
-files

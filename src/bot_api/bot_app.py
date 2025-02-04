@@ -9,17 +9,17 @@ from loguru import logger
 from rasp_api.schedule import ScheduleImageGenerator
 from rasp_api.parsing import TagsParser
 
-from bot_api.async_bot import AsyncVkBot, Context, GREETING_TEXT
-from bot_api.chats_connector import JsonChatsConnector as Chats
-from bot_api.services import NotificatorService
-from bot_api.utility import image_to_bytes
-from bot_api.keyboard import get_keyboard_string, BASIC_KEYBOARD, EMPTY_KEYBOARD
+from .async_bot import AsyncVkBot, Context, GREETING_TEXT
+from .chats_connector import JsonChatsConnector as Chats
+from .services import NotificatorService
+from .utility import image_to_bytes
+from .keyboard import get_keyboard_string, BASIC_KEYBOARD, EMPTY_KEYBOARD
 
 try:
     from dotenv import load_dotenv
 
     load_dotenv(
-        dotenv_path=path.join(path.dirname(path.abspath(__file__)), "../files/.env")
+        dotenv_path=path.join(path.dirname(path.abspath(__file__)), "../../assets/.env")
     )
 except ModuleNotFoundError:
     pass

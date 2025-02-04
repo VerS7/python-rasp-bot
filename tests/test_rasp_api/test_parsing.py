@@ -4,7 +4,7 @@
 
 from unittest import IsolatedAsyncioTestCase, main
 
-from rasp_api.parsing import *
+from src.rasp_api.parsing import *
 
 
 class TestTagsParser(IsolatedAsyncioTestCase):

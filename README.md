@@ -1,15 +1,49 @@
-# ВК-бот
+# ВК-бот по рассылке расписания
 
-### Это мой проект ВК-бота, рассылающего расписание университета
+### Это мой проект ВК-бота, рассылающего расписание университета, в котором я обучался.
 
 ### Пример использования
 
-![](https://github.com/VerS7/python-rasp-bot/blob/main/example.png)
+#### Команда `инфо`.
 
-### Build
+![инфо](docs/info.png)
 
-Сборка Docker-образа
-`docker build -t python-rasp-bot .`
+#### Оповещение расписания.
 
-Запуск Docker-контейнера
-`docker run --name <name> --env-file <.env file> --restart=always -v ./files:/app/files -d python-rasp-bot`
+![оповещение](docs/notification.png)
+
+#### Кнопка `Недельное расписание`.
+
+![оповещение](docs/weekly.png)
+
+### Build & Deploy
+
+Сборка осуществляется через **Docker**.
+
+Сборка **Docker-образа**.
+
+```bash
+docker build -t python-rasp-bot .
+```
+
+Запуск **Docker-контейнера**.
+
+```bash
+docker run --name <name> \
+           --env-file <.env file> \
+           --restart=always \
+           -v ./assets:/app/assets \
+           -d python-rasp-bot
+```
+
+### Возможности
+
+1. Команды через префиксы **(инфо, расп, нрасп, орасп)**.
+
+2. Команды через ВК-кнопки.
+
+3. Подключение к оповещению в **7:00** и **19:00** по МСК
+
+4. Расписание в удобных картинках
+
+5. Работа как в ЛС, так и в групповых чатах.

@@ -10,12 +10,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 IMAGE_SIZE = (1200, 1500)
 FONT_PATH = path.join(
-    path.dirname(path.dirname(path.abspath(__file__))), "files/impact.ttf"
+    path.dirname(path.dirname(path.abspath(__file__))), "../assets/impact.ttf"
 )
 MAIN_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=35)
 OTHER_IMAGE_FONT = ImageFont.truetype(FONT_PATH, size=50)
 BG_IMAGE = path.join(
-    path.dirname(path.dirname(path.abspath(__file__))), "files/raspback.png"
+    path.dirname(path.dirname(path.abspath(__file__))), "../assets/raspback.png"
 )
 
 

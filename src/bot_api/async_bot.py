@@ -24,14 +24,14 @@ from bot_api.utility import load_txt
 
 
 GREETING_FILE = path.join(
-    path.dirname(path.dirname(path.abspath(__file__))), "files/info.txt"
+    path.dirname(path.dirname(path.abspath(__file__))), "../assets/info.txt"
 )
 
 GREETING_TEXT = load_txt(GREETING_FILE)  # Текст с информацией о боте
 EXC_DELAY = 10
 
 logger.add(
-    path.join(path.dirname(path.dirname(path.abspath(__file__))), "files/debug.log"),
+    path.join(path.dirname(path.dirname(path.abspath(__file__))), "../assets/debug.log"),
     rotation="2 MB",
 )
 
